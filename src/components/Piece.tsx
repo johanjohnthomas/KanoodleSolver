@@ -46,17 +46,52 @@ const PieceComponent: React.FC<PieceProps> = ({ piece }) => {
   };
 
   const getCurrentShape = () => {
-    // Apply flipping first if needed
-    if (flipped && piece.flips && piece.flips.length > 0) {
-      return piece.flips[0];
+    let shape: number[][];
+    
+    if (flipped) {
+      // Use pre-computed flipped rotations if available
+      if (piece.flippedRotations && piece.flippedRotations.length > rotation) {
+        shape = piece.flippedRotations[rotation];
+      } else {
+        // Fallback: flip then rotate
+        const flippedShape = piece.flips && piece.flips.length > 1 ? piece.flips[1] : piece.shape.map(row => [...row].reverse());
+        shape = flippedShape;
+        
+        // Apply rotation to the flipped shape
+        for (let i = 0; i < rotation; i++) {
+          const size = shape.length;
+          const newShape: number[][] = Array(size).fill(null).map(() => Array(size).fill(0));
+          
+          for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+              newShape[col][size - 1 - row] = shape[row][col];
+            }
+          }
+          shape = newShape;
+        }
+      }
+    } else {
+      // Use pre-computed rotations for original shape
+      if (piece.rotations && piece.rotations.length > rotation) {
+        shape = piece.rotations[rotation];
+      } else {
+        // Fallback to dynamic rotation
+        shape = piece.shape;
+        for (let i = 0; i < rotation; i++) {
+          const size = shape.length;
+          const newShape: number[][] = Array(size).fill(null).map(() => Array(size).fill(0));
+          
+          for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+              newShape[col][size - 1 - row] = shape[row][col];
+            }
+          }
+          shape = newShape;
+        }
+      }
     }
     
-    // Apply rotation if needed
-    if (rotation > 0 && piece.rotations && piece.rotations.length > rotation) {
-      return piece.rotations[rotation];
-    }
-    
-    return piece.shape;
+    return shape;
   };
 
   // Get the bounding box of the piece to avoid rendering empty cells

@@ -1,6 +1,34 @@
 import { Board, Piece, PlacedPiece, BoardLayout } from './types';
 import { PIECES } from './pieces';
 
+// Utility functions for shape transformations
+function rotateShape90(shape: number[][]): number[][] {
+  const size = shape.length;
+  const rotated: number[][] = Array(size).fill(null).map(() => Array(size).fill(0));
+  
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      rotated[j][size - 1 - i] = shape[i][j];
+    }
+  }
+  
+  return rotated;
+}
+
+function flipShapeHorizontal(shape: number[][]): number[][] {
+  return shape.map(row => [...row].reverse());
+}
+
+function getRotatedShape(shape: number[][], rotations: number): number[][] {
+  console.log('getRotatedShape - input shape:', shape, 'rotations:', rotations);
+  let result = shape;
+  for (let i = 0; i < rotations; i++) {
+    result = rotateShape90(result);
+    console.log(`After rotation ${i + 1}:`, result);
+  }
+  return result;
+}
+
 export class KanoodleSolver {
   private board: Board;
   private layout: BoardLayout;
@@ -17,18 +45,30 @@ export class KanoodleSolver {
   }
 
   private getTransformedShape(piece: Piece, rotation: number = 0, flipped: boolean = false): number[][] {
-    let shape = piece.shape;
+    console.log('getTransformedShape - piece:', piece.name, 'rotation:', rotation, 'flipped:', flipped);
     
-    // Apply flipping first if needed
-    if (flipped && piece.flips && piece.flips.length > 0) {
-      shape = piece.flips[0];
+    let shape: number[][];
+    
+    if (flipped) {
+      // Use pre-computed flipped rotations if available
+      if (piece.flippedRotations && piece.flippedRotations.length > rotation) {
+        shape = piece.flippedRotations[rotation];
+      } else {
+        // Fallback: flip then rotate
+        const flippedShape = piece.flips && piece.flips.length > 1 ? piece.flips[1] : flipShapeHorizontal(piece.shape);
+        shape = getRotatedShape(flippedShape, rotation);
+      }
+    } else {
+      // Use pre-computed rotations for original shape
+      if (piece.rotations && piece.rotations.length > rotation) {
+        shape = piece.rotations[rotation];
+      } else {
+        // Fallback to dynamic rotation
+        shape = getRotatedShape(piece.shape, rotation);
+      }
     }
     
-    // Apply rotation if needed
-    if (rotation > 0 && piece.rotations && piece.rotations.length > rotation) {
-      shape = piece.rotations[rotation];
-    }
-    
+    console.log('Final transformed shape:', shape);
     return shape;
   }
 
@@ -227,16 +267,27 @@ export function isValidPiecePlacement(
     return false;
   }
 
-  let shape = piece.shape;
+  console.log('isValidPiecePlacement - piece:', piece.name, 'rotation:', rotation, 'flipped:', flipped);
+
+  let shape: number[][];
   
-  // Apply flipping first if needed
-  if (flipped && piece.flips && piece.flips.length > 0) {
-    shape = piece.flips[0];
-  }
-  
-  // Apply rotation if needed
-  if (rotation > 0 && piece.rotations && piece.rotations.length > rotation) {
-    shape = piece.rotations[rotation];
+  if (flipped) {
+    // Use pre-computed flipped rotations if available
+    if (piece.flippedRotations && piece.flippedRotations.length > rotation) {
+      shape = piece.flippedRotations[rotation];
+    } else {
+      // Fallback: flip then rotate
+      const flippedShape = piece.flips && piece.flips.length > 1 ? piece.flips[1] : flipShapeHorizontal(piece.shape);
+      shape = getRotatedShape(flippedShape, rotation);
+    }
+  } else {
+    // Use pre-computed rotations for original shape
+    if (piece.rotations && piece.rotations.length > rotation) {
+      shape = piece.rotations[rotation];
+    } else {
+      // Fallback to dynamic rotation
+      shape = getRotatedShape(piece.shape, rotation);
+    }
   }
   
   for (let rowIndex = 0; rowIndex < shape.length; rowIndex++) {
@@ -280,18 +331,32 @@ export function placePieceOnBoard(
     return board;
   }
 
+  console.log('placePieceOnBoard - piece:', piece.name, 'rotation:', rotation, 'flipped:', flipped);
+  console.log('Original shape:', piece.shape);
+
   const newBoard = board.map(row => [...row]);
-  let shape = piece.shape;
+  let shape: number[][];
   
-  // Apply flipping first if needed
-  if (flipped && piece.flips && piece.flips.length > 0) {
-    shape = piece.flips[0];
+  if (flipped) {
+    // Use pre-computed flipped rotations if available
+    if (piece.flippedRotations && piece.flippedRotations.length > rotation) {
+      shape = piece.flippedRotations[rotation];
+    } else {
+      // Fallback: flip then rotate
+      const flippedShape = piece.flips && piece.flips.length > 1 ? piece.flips[1] : flipShapeHorizontal(piece.shape);
+      shape = getRotatedShape(flippedShape, rotation);
+    }
+  } else {
+    // Use pre-computed rotations for original shape
+    if (piece.rotations && piece.rotations.length > rotation) {
+      shape = piece.rotations[rotation];
+    } else {
+      // Fallback to dynamic rotation
+      shape = getRotatedShape(piece.shape, rotation);
+    }
   }
   
-  // Apply rotation if needed
-  if (rotation > 0 && piece.rotations && piece.rotations.length > rotation) {
-    shape = piece.rotations[rotation];
-  }
+  console.log('Final shape for placement:', shape);
   
   for (let rowIndex = 0; rowIndex < shape.length; rowIndex++) {
     for (let colIndex = 0; colIndex < shape[rowIndex].length; colIndex++) {

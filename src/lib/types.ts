@@ -2,8 +2,9 @@ export type Piece = {
   shape: number[][]; // 4x4 matrix
   name: string;
   color: string;
-  rotations: number[][][];
-  flips: number[][][];
+  rotations: number[][][]; // rotations of the original shape
+  flips: number[][][]; // [original, flipped]
+  flippedRotations: number[][][]; // rotations of the flipped shape
 };
 
 export type PlacedPiece = {

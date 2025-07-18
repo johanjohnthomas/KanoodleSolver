@@ -7,30 +7,30 @@ function generateRotations(shape: number[][]): number[][][] {
   let currentShape = shape;
   
   for (let i = 0; i < 4; i++) {
-    rotations.push(currentShape.map(row => [...row]));
+    // Normalize each rotation so all pieces are positioned consistently
+    const normalizedShape = normalizeShape(currentShape);
+    rotations.push(normalizedShape);
     currentShape = rotateShape4x4(currentShape);
   }
   
   return rotations;
 }
 
-// Generate flipped versions for a 4x4 piece
-function generateFlips(shape: number[][]): number[][][] {
+// Generate flipped versions and their rotations for a 4x4 piece
+function generateFlipsAndRotations(shape: number[][]): { flips: number[][][], flippedRotations: number[][][] } {
   const flips: number[][][] = [];
   
-  // Original
-  flips.push(shape.map(row => [...row]));
+  // Original (not flipped) - normalize it
+  flips.push(normalizeShape(shape));
   
-  // Horizontal flip
-  flips.push(shape.map(row => [...row].reverse()));
+  // Horizontal flip - normalize it
+  const flippedShape = shape.map(row => [...row].reverse());
+  flips.push(normalizeShape(flippedShape));
   
-  // Vertical flip
-  flips.push([...shape].reverse());
+  // Generate rotations for the normalized flipped shape
+  const flippedRotations = generateRotations(flippedShape);
   
-  // Both flips
-  flips.push([...shape].reverse().map(row => [...row].reverse()));
-  
-  return flips;
+  return { flips, flippedRotations };
 }
 
 // Rotate a 4x4 shape 90 degrees clockwise
@@ -64,20 +64,66 @@ function loadPieces(): Piece[] {
     
     const piece: Piece = {
       name: pieceData.name,
-      shape: pieceData.shape,
+      shape: normalizeShape(pieceData.shape), // Normalize the original shape too
       color: pieceData.color,
       rotations: [],
       flips: [],
+      flippedRotations: [],
     };
-    
+
     // Generate transformations
     piece.rotations = generateRotations(piece.shape);
-    piece.flips = generateFlips(piece.shape);
+    const { flips, flippedRotations } = generateFlipsAndRotations(piece.shape);
+    piece.flips = flips;
+    piece.flippedRotations = flippedRotations;
     
     pieces.push(piece);
   }
   
   return pieces;
+}
+
+// Calculate the bounding box of a piece shape
+function getBoundingBox(shape: number[][]): { minRow: number; maxRow: number; minCol: number; maxCol: number; } {
+  let minRow = 4, maxRow = -1, minCol = 4, maxCol = -1;
+  
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (shape[i][j] === 1) {
+        minRow = Math.min(minRow, i);
+        maxRow = Math.max(maxRow, i);
+        minCol = Math.min(minCol, j);
+        maxCol = Math.max(maxCol, j);
+      }
+    }
+  }
+  
+  return { minRow, maxRow, minCol, maxCol };
+}
+
+// Normalize a shape by moving it to the top-left of the 4x4 grid
+function normalizeShape(shape: number[][]): number[][] {
+  const bounds = getBoundingBox(shape);
+  
+  if (bounds.minRow > bounds.maxRow || bounds.minCol > bounds.maxCol) {
+    return shape; // Empty shape, return as-is
+  }
+  
+  const normalized: number[][] = Array(4).fill(null).map(() => Array(4).fill(0));
+  
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if (shape[i][j] === 1) {
+        const newRow = i - bounds.minRow;
+        const newCol = j - bounds.minCol;
+        if (newRow >= 0 && newRow < 4 && newCol >= 0 && newCol < 4) {
+          normalized[newRow][newCol] = 1;
+        }
+      }
+    }
+  }
+  
+  return normalized;
 }
 
 // Export the pieces loaded from JSON
