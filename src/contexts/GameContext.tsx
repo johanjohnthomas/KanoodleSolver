@@ -72,18 +72,65 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    if (!isValidPiecePlacement(board, gameConfig.currentLayout, piece, x, y, rotation, flipped)) {
-      return false;
-    }
+    console.log('Placing piece:', piece.name, 'at position:', x, y);
 
-    const newBoard = placePieceOnBoard(board, piece, x, y, rotation, flipped);
-    setBoard(newBoard);
+    let success = false;
     
-    const newPlacedPiece: PlacedPiece = { piece, x, y, rotation, flipped };
-    setPlacedPieces(prev => [...prev, newPlacedPiece]);
+    // Use functional state updates to work with the latest state
+    setBoard(currentBoard => {
+      setPlacedPieces(currentPlacedPieces => {
+        console.log('Current board state:', currentBoard);
+        console.log('Current placed pieces:', currentPlacedPieces.map(p => p.piece.name));
+        
+        // Create a working copy of the board
+        let workingBoard = currentBoard.map(row => [...row]);
+        
+        // Check if this piece is already placed and remove it
+        const existingPiece = currentPlacedPieces.find(p => p.piece.name === piece.name);
+        if (existingPiece) {
+          console.log('Removing existing piece:', piece.name);
+          // Remove the existing piece from the working board
+          for (let i = 0; i < workingBoard.length; i++) {
+            for (let j = 0; j < workingBoard[i].length; j++) {
+              if (workingBoard[i][j] === piece.name) {
+                workingBoard[i][j] = null;
+              }
+            }
+          }
+        }
+        
+        console.log('Working board after cleanup:', workingBoard);
+        
+        // Validate the placement on the working board
+        if (!isValidPiecePlacement(workingBoard, gameConfig.currentLayout, piece, x, y, rotation, flipped)) {
+          console.log('Invalid placement for piece:', piece.name);
+          success = false;
+          return currentPlacedPieces; // Return unchanged
+        }
+
+        // Place the piece on the working board
+        const finalBoard = placePieceOnBoard(workingBoard, piece, x, y, rotation, flipped);
+        console.log('Final board after placement:', finalBoard);
+        
+        // Update the board state
+        setBoard(finalBoard);
+        success = true;
+        
+        // Prepare the new placed pieces array
+        const newPlacedPiece: PlacedPiece = { piece, x, y, rotation, flipped };
+        const filteredPieces = currentPlacedPieces.filter(p => p.piece.name !== piece.name);
+        const newPlacedPieces = [...filteredPieces, newPlacedPiece];
+        
+        console.log('New placed pieces:', newPlacedPieces.map(p => p.piece.name));
+        
+        return newPlacedPieces;
+      });
+      
+      return currentBoard; // This will be overridden by the inner setBoard
+    });
     
-    return true;
-  }, [board, gameConfig.currentLayout]);
+    return success;
+  }, [gameConfig.currentLayout]);
 
   const removePiece = useCallback((x: number, y: number) => {
     const newBoard = board.map(row => [...row]);
