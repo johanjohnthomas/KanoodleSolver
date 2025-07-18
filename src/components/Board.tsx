@@ -18,18 +18,34 @@ const Board: React.FC<BoardProps> = ({ board, onDropPiece, onMovePiece }) => {
   const [, drop] = useDrop(() => ({
     accept: ['piece', 'board-piece'],
     drop: (item: any, monitor) => {
-      const offset = monitor.getClientOffset();
+      const clientOffset = monitor.getClientOffset();
+      const sourceClientOffset = monitor.getSourceClientOffset();
       
-      if (offset && boardRef.current) {
+      if (clientOffset && sourceClientOffset && boardRef.current) {
         const boardRect = boardRef.current.getBoundingClientRect();
         const padding = 16; // p-4 = 1rem = 16px
         const cellSize = 32; // w-8/h-8 = 2rem = 32px
         const gap = 4; // gap-1 = 0.25rem = 4px
         const cellWithGap = cellSize + gap;
 
-        // Calculate the drop position based on cursor location
-        const x = Math.floor((offset.x - boardRect.left - padding) / cellWithGap);
-        const y = Math.floor((offset.y - boardRect.top - padding) / cellWithGap);
+        // Calculate the initial drag offset within the piece
+        const initialOffset = monitor.getInitialClientOffset();
+        const initialSourceOffset = monitor.getInitialSourceClientOffset();
+        
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        
+        if (initialOffset && initialSourceOffset) {
+          dragOffsetX = initialOffset.x - initialSourceOffset.x;
+          dragOffsetY = initialOffset.y - initialSourceOffset.y;
+        }
+
+        // Calculate the drop position accounting for the drag offset
+        const adjustedX = clientOffset.x - dragOffsetX;
+        const adjustedY = clientOffset.y - dragOffsetY;
+        
+        const x = Math.floor((adjustedX - boardRect.left - padding) / cellWithGap);
+        const y = Math.floor((adjustedY - boardRect.top - padding) / cellWithGap);
         
         // Ensure coordinates are within bounds
         if (x >= 0 && x < gameConfig.currentLayout.cols && y >= 0 && y < gameConfig.currentLayout.rows) {

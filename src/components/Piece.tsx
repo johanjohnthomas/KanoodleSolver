@@ -26,7 +26,7 @@ const PieceComponent: React.FC<PieceProps> = ({ piece }) => {
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
-  }));
+  }), [piece, rotation, flipped]); // Add dependencies to recreate when rotation/flipped changes
 
   // Use empty image for drag preview to customize the preview
   useEffect(() => {
