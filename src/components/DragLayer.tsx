@@ -20,15 +20,53 @@ const DragLayer: React.FC<DragLayerProps> = () => {
     if (!item || !item.piece) return null;
 
     const piece = item.piece;
-    let shape = piece.shape;
+    const rotation = item.rotation || 0;
+    const flipped = item.flipped || false;
     
-    // Apply transformations
-    if (item.flipped && piece.flips && piece.flips.length > 0) {
-      shape = piece.flips[0];
-    }
+    let shape: number[][];
     
-    if (item.rotation > 0 && piece.rotations && piece.rotations.length > item.rotation) {
-      shape = piece.rotations[item.rotation];
+    // Use the same transformation logic as the rest of the app
+    if (flipped) {
+      // Use pre-computed flipped rotations if available
+      if (piece.flippedRotations && piece.flippedRotations.length > rotation) {
+        shape = piece.flippedRotations[rotation];
+      } else {
+        // Fallback: flip then rotate
+        const flippedShape = piece.flips && piece.flips.length > 1 ? piece.flips[1] : piece.shape.map((row: number[]) => [...row].reverse());
+        shape = flippedShape;
+        
+        // Apply rotation to the flipped shape
+        for (let i = 0; i < rotation; i++) {
+          const size = shape.length;
+          const newShape: number[][] = Array(size).fill(null).map(() => Array(size).fill(0));
+          
+          for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+              newShape[col][size - 1 - row] = shape[row][col];
+            }
+          }
+          shape = newShape;
+        }
+      }
+    } else {
+      // Use pre-computed rotations for original shape
+      if (piece.rotations && piece.rotations.length > rotation) {
+        shape = piece.rotations[rotation];
+      } else {
+        // Fallback to dynamic rotation
+        shape = piece.shape;
+        for (let i = 0; i < rotation; i++) {
+          const size = shape.length;
+          const newShape: number[][] = Array(size).fill(null).map(() => Array(size).fill(0));
+          
+          for (let row = 0; row < size; row++) {
+            for (let col = 0; col < size; col++) {
+              newShape[col][size - 1 - row] = shape[row][col];
+            }
+          }
+          shape = newShape;
+        }
+      }
     }
 
     // Get bounding box
