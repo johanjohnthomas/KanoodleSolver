@@ -220,15 +220,24 @@ export class KanoodleSolver {
     return this.cloneBoard(this.board);
   }
 
-  public generateRandomStartingPosition(): PlacedPiece[] {
-    // Place 2-4 random pieces
-    const numPieces = Math.floor(Math.random() * 3) + 2;
-    const shuffledPieces = [...PIECES].sort(() => Math.random() - 0.5);
+  public generateRandomStartingPosition(numPieces?: number, availablePieceNames?: string[]): PlacedPiece[] {
+    let piecesToPlace: typeof PIECES;
+    
+    if (availablePieceNames) {
+      // If specific piece names are provided, use those exact pieces
+      piecesToPlace = PIECES.filter(piece => availablePieceNames.includes(piece.name));
+    } else {
+      // Use default behavior: random selection from all pieces
+      const pieceCount = numPieces ?? Math.floor(Math.random() * 3) + 2;
+      const shuffledPieces = [...PIECES].sort(() => Math.random() - 0.5);
+      piecesToPlace = shuffledPieces.slice(0, pieceCount);
+    }
+    
+    // Shuffle the pieces to place them in random order
+    const shuffledPiecesToPlace = [...piecesToPlace].sort(() => Math.random() - 0.5);
     const placedPieces: PlacedPiece[] = [];
 
-    for (let i = 0; i < numPieces && i < shuffledPieces.length; i++) {
-      const piece = shuffledPieces[i];
-      
+    for (const piece of shuffledPiecesToPlace) {
       // Try to place piece randomly
       for (let attempts = 0; attempts < 50; attempts++) {
         const x = Math.floor(Math.random() * this.layout.cols);

@@ -1,16 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '@/contexts/GameContext';
+import RandomGameSetup from './RandomGameSetup';
 
 const GameControls: React.FC = () => {
   const { 
     gameState, 
     startGame, 
+    startRandomGame,
     resetGame, 
     solveGame, 
     getHint,
     isBoardComplete,
     placedPieces
   } = useGame();
+
+  const [showRandomSetup, setShowRandomSetup] = useState(false);
 
   const handlePlayClick = () => {
     startGame();
@@ -28,6 +32,14 @@ const GameControls: React.FC = () => {
     getHint();
   };
 
+  const handleRandomGameSetup = () => {
+    setShowRandomSetup(true);
+  };
+
+  const handleStartRandomGame = (numPieces: number, selectedPieces: string[]) => {
+    startRandomGame(numPieces, selectedPieces);
+  };
+
   const completedCells = placedPieces.length;
   const totalPieces = 12; // Total number of pieces
 
@@ -40,6 +52,14 @@ const GameControls: React.FC = () => {
           disabled={gameState === 'playing'}
         >
           {gameState === 'idle' ? 'Start Game' : 'New Game'}
+        </button>
+        
+        <button
+          onClick={handleRandomGameSetup}
+          className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors font-semibold"
+          disabled={gameState === 'playing'}
+        >
+          Random Game
         </button>
         
         <button
@@ -105,8 +125,16 @@ const GameControls: React.FC = () => {
           <li>• Use rotate (↻) and flip (⟲) buttons on pieces</li>
           <li>• Click placed pieces to remove them</li>
           <li>• Use "Hint" for automatic piece placement</li>
+          <li>• Use "Random Game" for custom starting configurations</li>
         </ul>
       </div>
+
+      {/* Random Game Setup Modal */}
+      <RandomGameSetup
+        isOpen={showRandomSetup}
+        onClose={() => setShowRandomSetup(false)}
+        onStartRandomGame={handleStartRandomGame}
+      />
     </div>
   );
 };

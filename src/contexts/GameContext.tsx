@@ -17,6 +17,7 @@ interface GameContextType {
   placePiece: (piece: any, x: number, y: number, rotation?: number, flipped?: boolean) => boolean;
   removePiece: (x: number, y: number) => void;
   startGame: () => void;
+  startRandomGame: (numPieces: number, selectedPieceNames: string[]) => void;
   resetGame: () => void;
   solveGame: () => void;
   getHint: () => void;
@@ -150,6 +151,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setGameState('playing');
   }, [gameConfig.currentLayout]);
 
+  const startRandomGame = useCallback((numPieces: number, selectedPieceNames: string[]) => {
+    const solver = new KanoodleSolver(createEmptyBoard(gameConfig.currentLayout), gameConfig.currentLayout);
+    // Pass the selected piece names directly (numPieces is ignored since we use all selected pieces)
+    const startingPieces = solver.generateRandomStartingPosition(undefined, selectedPieceNames);
+    const newBoard = solver.getSolution();
+    
+    setBoard(newBoard);
+    setResetBoard(newBoard);
+    setPlacedPieces(startingPieces);
+    setGameState('playing');
+  }, [gameConfig.currentLayout]);
+
   const resetGame = useCallback(() => {
     setBoard(resetBoard.map(row => [...row]));
     setGameState('playing');
@@ -206,6 +219,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     placePiece,
     removePiece,
     startGame,
+    startRandomGame,
     resetGame,
     solveGame,
     getHint,
