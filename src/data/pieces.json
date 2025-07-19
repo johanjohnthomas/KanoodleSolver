@@ -2,17 +2,17 @@
   "pieces": [
     {
       "name": "A",
-      "color": "bg-red-500",
+      "color": "bg-orange-200",
       "shape": [
         [1, 0, 0, 0],
-        [1, 1, 0, 0],
         [1, 0, 0, 0],
+        [1, 1, 0, 0],
         [1, 0, 0, 0]
       ]
     },
     {
       "name": "B",
-      "color": "bg-blue-500",
+      "color": "bg-purple-800",
       "shape": [
         [1, 1, 1, 1],
         [0, 0, 0, 0],
@@ -22,7 +22,7 @@
     },
     {
       "name": "C",
-      "color": "bg-green-500",
+      "color": "bg-gray-500",
       "shape": [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
@@ -32,7 +32,7 @@
     },
     {
       "name": "D",
-      "color": "bg-yellow-500",
+      "color": "bg-orange-500",
       "shape": [
         [1, 1, 0, 0],
         [0, 1, 0, 0],
@@ -42,7 +42,7 @@
     },
     {
       "name": "E",
-      "color": "bg-purple-500",
+      "color": "bg-blue-800",
       "shape": [
         [0, 0, 0, 1],
         [0, 0, 0, 1],
@@ -52,7 +52,7 @@
     },
     {
       "name": "F",
-      "color": "bg-orange-500",
+      "color": "bg-gray-500",
       "shape": [
         [0, 0, 1, 0],
         [0, 1, 1, 1],
@@ -62,7 +62,7 @@
     },
     {
       "name": "G",
-      "color": "bg-pink-500",
+      "color": "bg-cyan-500",
       "shape": [
         [1, 0, 0, 0],
         [1, 0, 0, 0],
@@ -72,7 +72,7 @@
     },
     {
       "name": "H",
-      "color": "bg-indigo-500",
+      "color": "bg-pink-500",
       "shape": [
         [0, 0, 0, 0],
         [0, 0, 1, 0],
@@ -82,7 +82,7 @@
     },
     {
       "name": "I",
-      "color": "bg-teal-500",
+      "color": "bg-red-500",
       "shape": [
         [0, 0, 0, 0],
         [0, 0, 0, 1],
@@ -92,7 +92,7 @@
     },
     {
       "name": "J",
-      "color": "bg-cyan-500",
+      "color": "bg-green-800",
       "shape": [
         [1, 1, 1, 0],
         [0, 0, 1, 1],
@@ -102,7 +102,7 @@
     },
     {
       "name": "K",
-      "color": "bg-lime-500",
+      "color": "bg-yellow-500",
       "shape": [
         [0, 0, 1, 1],
         [0, 0, 0, 1],
@@ -112,7 +112,7 @@
     },
     {
       "name": "L",
-      "color": "bg-amber-500",
+      "color": "bg-lime-500",
       "shape": [
         [1, 1, 0, 0],
         [1, 1, 0, 0],
