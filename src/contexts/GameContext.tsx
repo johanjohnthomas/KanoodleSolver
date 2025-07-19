@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Board, GameState, PlacedPiece, BoardLayout, GameConfig } from '@/lib/types';
 import { BOARD_LAYOUTS } from '@/lib/pieces';
 import { KanoodleSolver, createEmptyBoard, isValidPiecePlacement, placePieceOnBoard } from '@/lib/solver';
@@ -11,6 +11,9 @@ interface GameContextType {
   gameState: GameState;
   gameConfig: GameConfig;
   placedPieces: PlacedPiece[];
+  lastHint: PlacedPiece | null;
+  hintMessage: string;
+  nextHintPreview: PlacedPiece | null;
   
   // Actions
   setBoard: (board: Board) => void;
@@ -22,6 +25,8 @@ interface GameContextType {
   solveGame: () => void;
   getHint: () => void;
   updateGameConfig: (config: Partial<GameConfig>) => void;
+  clearHintMessage: () => void;
+  refreshHintPreview: () => void;
   
   // Getters
   isBoardComplete: () => boolean;
@@ -49,6 +54,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [resetBoard, setResetBoard] = useState<Board>(() => createEmptyBoard(gameConfig.currentLayout));
   const [gameState, setGameState] = useState<GameState>('idle');
   const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
+  const [lastHint, setLastHint] = useState<PlacedPiece | null>(null);
+  const [hintMessage, setHintMessage] = useState<string>('');
+  const [nextHintPreview, setNextHintPreview] = useState<PlacedPiece | null>(null);
 
   const updateGameConfig = useCallback((config: Partial<GameConfig>) => {
     setGameConfig(prev => {
@@ -177,8 +185,33 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBoard(solvedBoard);
       setPlacedPieces(solution);
       setGameState('solved');
+      setHintMessage('Puzzle solved automatically! 🎉');
+      setTimeout(() => setHintMessage(''), 3000);
+    } else {
+      setHintMessage('No solution found for the current board configuration');
+      setTimeout(() => setHintMessage(''), 3000);
     }
   }, [board, gameConfig.currentLayout]);
+
+  const refreshHintPreview = useCallback(() => {
+    if (gameConfig.showHints && gameState === 'playing') {
+      // Simple hint preview without complex solving
+      const timeoutId = setTimeout(() => {
+        try {
+          const solver = new KanoodleSolver(board, gameConfig.currentLayout);
+          const hint = solver.getHint();
+          setNextHintPreview(hint);
+        } catch (error) {
+          console.warn('Hint preview failed:', error);
+          setNextHintPreview(null);
+        }
+      }, 500); // Reduced delay
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setNextHintPreview(null);
+    }
+  }, [board, gameConfig.currentLayout, gameConfig.showHints, gameState]);
 
   const getHint = useCallback(() => {
     const solver = new KanoodleSolver(board, gameConfig.currentLayout);
@@ -190,13 +223,38 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Update reset board to include the hint
         const newResetBoard = placePieceOnBoard(resetBoard, hint.piece, hint.x, hint.y, hint.rotation, hint.flipped);
         setResetBoard(newResetBoard);
+        setLastHint(hint);
+        setHintMessage(`Placed ${hint.piece.name} piece as a hint!`);
+        
+        // Refresh hint preview for the next hint
+        setTimeout(() => {
+          refreshHintPreview();
+        }, 100);
+        
+        // Clear hint message after 3 seconds
+        setTimeout(() => setHintMessage(''), 3000);
+      } else {
+        setHintMessage('Could not place hint piece - position might be blocked');
+        setTimeout(() => setHintMessage(''), 3000);
       }
+    } else {
+      setHintMessage('No hint available - puzzle might not be solvable with current configuration');
+      setTimeout(() => setHintMessage(''), 3000);
     }
-  }, [board, gameConfig.currentLayout, placePiece, resetBoard]);
+  }, [board, gameConfig.currentLayout, placePiece, resetBoard, refreshHintPreview]);
+
+  const clearHintMessage = useCallback(() => {
+    setHintMessage('');
+  }, []);
 
   const canPlacePiece = useCallback((piece: any, x: number, y: number, rotation: number = 0, flipped: boolean = false): boolean => {
     return isValidPiecePlacement(board, gameConfig.currentLayout, piece, x, y, rotation, flipped);
   }, [board, gameConfig.currentLayout]);
+
+  // Effect to refresh hint preview when board or config changes
+  useEffect(() => {
+    refreshHintPreview();
+  }, [refreshHintPreview]);
 
   const isBoardComplete = useCallback((): boolean => {
     for (let y = 0; y < gameConfig.currentLayout.rows; y++) {
@@ -215,6 +273,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     gameState,
     gameConfig,
     placedPieces,
+    lastHint,
+    hintMessage,
+    nextHintPreview,
     setBoard,
     placePiece,
     removePiece,
@@ -224,6 +285,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     solveGame,
     getHint,
     updateGameConfig,
+    clearHintMessage,
+    refreshHintPreview,
     isBoardComplete,
     canPlacePiece,
   };

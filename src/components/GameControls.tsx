@@ -11,10 +11,14 @@ const GameControls: React.FC = () => {
     solveGame, 
     getHint,
     isBoardComplete,
-    placedPieces
+    placedPieces,
+    hintMessage,
+    clearHintMessage,
+    nextHintPreview
   } = useGame();
 
   const [showRandomSetup, setShowRandomSetup] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePlayClick = () => {
     startGame();
@@ -25,11 +29,27 @@ const GameControls: React.FC = () => {
   };
 
   const handleSolveClick = () => {
-    solveGame();
+    setIsProcessing(true);
+    // Use setTimeout to allow UI to update before processing
+    setTimeout(() => {
+      try {
+        solveGame();
+      } finally {
+        setIsProcessing(false);
+      }
+    }, 10);
   };
 
   const handleHintClick = () => {
-    getHint();
+    setIsProcessing(true);
+    // Use setTimeout to allow UI to update before processing
+    setTimeout(() => {
+      try {
+        getHint();
+      } finally {
+        setIsProcessing(false);
+      }
+    }, 10);
   };
 
   const handleRandomGameSetup = () => {
@@ -72,23 +92,59 @@ const GameControls: React.FC = () => {
         
         <button
           onClick={handleHintClick}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors font-semibold"
-          disabled={gameState !== 'playing'}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          disabled={gameState !== 'playing' || isProcessing}
         >
-          Hint
+          {isProcessing ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Working...
+            </>
+          ) : (
+            'Hint'
+          )}
         </button>
         
         <button
           onClick={handleSolveClick}
-          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors font-semibold"
-          disabled={gameState !== 'playing'}
+          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          disabled={gameState !== 'playing' || isProcessing}
         >
-          Solve
+          {isProcessing ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Solving...
+            </>
+          ) : (
+            'Solve'
+          )}
         </button>
       </div>
 
       {/* Game Status */}
       <div className="flex flex-col gap-2">
+        {/* Hint Message */}
+        {hintMessage && (
+          <div className="text-center p-2 bg-blue-50 border border-blue-200 rounded-md">
+            <span className="text-sm text-blue-700 font-medium">{hintMessage}</span>
+            <button 
+              onClick={clearHintMessage}
+              className="ml-2 text-blue-500 hover:text-blue-700 text-xs"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        
+        {/* Next Hint Preview Info */}
+        {nextHintPreview && (
+          <div className="text-center p-2 bg-green-50 border border-green-200 rounded-md">
+            <span className="text-sm text-green-700">
+              💡 Next hint available: {nextHintPreview.piece.name} piece
+            </span>
+          </div>
+        )}
+        
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700">Progress:</span>
           <span className="text-sm text-gray-600">{completedCells}/{totalPieces} pieces</span>
@@ -117,19 +173,18 @@ const GameControls: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Tips */}
-      <div className="text-xs text-gray-500 border-t pt-2">
-        <div className="font-medium mb-1">Tips:</div>
-        <ul className="space-y-1">
-          <li>• Drag pieces from the right panel to the board</li>
-          <li>• Use rotate (↻) and flip (⟲) buttons on pieces</li>
-          <li>• Click placed pieces to remove them</li>
-          <li>• Use "Hint" for automatic piece placement</li>
-          <li>• Use "Random Game" for custom starting configurations</li>
-        </ul>
-      </div>
-
-      {/* Random Game Setup Modal */}
+        {/* Quick Tips */}
+        <div className="text-xs text-gray-500 border-t pt-2">
+          <div className="font-medium mb-1">Tips:</div>
+          <ul className="space-y-1">
+            <li>• Drag pieces from the right panel to the board</li>
+            <li>• Use rotate (↻) and flip (⟲) buttons on pieces</li>
+            <li>• Click placed pieces to remove them</li>
+            <li>• Use "Hint" for automatic piece placement</li>
+            <li>• Use "Random Game" for custom starting configurations</li>
+            <li>• Hint and Solve use fast algorithms for quick results</li>
+          </ul>
+        </div>      {/* Random Game Setup Modal */}
       <RandomGameSetup
         isOpen={showRandomSetup}
         onClose={() => setShowRandomSetup(false)}
