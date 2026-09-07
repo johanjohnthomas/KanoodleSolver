@@ -1,219 +1,121 @@
 # Kanoodle Solver Design System
 
-## 0. Research Log
-
-- Embedded refs: shortlisted Figma, Miro, and PlayStation; selected the existing-project redesign discipline plus Figma’s monochrome-tool/chromatic-content separation because the puzzle pieces, not the chrome, should carry color.
-- Lazyweb: 2 searches, 6 screens viewed (LA Times Sudoku, Boston Globe Sudoku, CNN Sudoblock, Slite canvas, GitBook canvas, Figma canvas). Harvested one dominant play surface, peripheral tool controls, immediate entry actions, and restrained status chrome.
-- Imagen drafts: `.impeccable/mocks/decision/kanoodle-bench-a.png`, `.impeccable/mocks/decision/kanoodle-bench-selected.png`, `.impeccable/mocks/decision/kanoodle-bench-mobile.png`. Selected `kanoodle-bench-selected.png` as the desktop composition contract and `kanoodle-bench-mobile.png` as responsive intent.
-- Interaction references: beui.dev `action-swap` for blur-and-scale state replacement, `swipeable-list` for interruptible gesture thresholds and momentum-free settling, and `button` for compact state feedback. Motion drag-event coordinates inform the pointer layer; board geometry remains the placement authority.
-- Direction: Impeccable’s concept roll selected the fifth grounded direction, a jeweler’s sorting bench. The assigned system beat the surreal garden, iridescent cloud, CRT arcade, oscilloscope, pop sleeve, and ruling-engine challengers on product clarity; it keeps the oscilloscope’s precise state legibility and the ruling engine’s disciplined hairlines as raises.
-
 ## Source of truth
+Active, 2026-09-07. The user's current brief replaces the previous specimen-workbench world with a physical 3D tabletop. Historical generated comps are no longer visual targets.
+Product truth: PRODUCT.md, canonical 5 × 11 board, twelve piece matrices, exact solver, existing interaction tests.
+Direction is pinned by the user: warm desk, realistic Kanoodle case, scattered bead pieces, visible rotation/flip animation. Impeccable's direction seed was consulted; the pinned physical scene takes precedence over its unrelated challengers.
 
-Status: Active
-Date: 2026-09-07
-Product surfaces: the single-page responsive Kanoodle board, its piece tray, action controls, instructions, and status feedback.
-Evidence reviewed: `PRODUCT.md`, incumbent page/components/styles, solver and piece data, six Lazyweb screens, Figma design reference, and the three generated comps above.
+## 0. Research Log
+- Existing UI review: large framed panels and square cells obscure the physical puzzle. Keep warmth; replace the framing and specimen drawer.
+- Product reference: classic Kanoodle black portable case and colorful connected spherical pieces. No official logo or licensed assets are copied.
+- Three.js and React Three Fiber v9: mesh events, ray/plane intersections, orthographic camera, demand rendering, soft shadow maps, React 19 compatibility. Sources: r3f.docs.pmnd.rs/api/events, /api/canvas, /tutorials/v9-migration-guide.
+- Motion/beui button and action-swap mechanisms retained from prior research: interruptible press response, reduced-motion path. 3D rotations are a novel geometry-backed mechanism, using frame-delta damping with continuous angles.
+- No bitmap mock is authoritative: the actual lit interactive scene is the design artifact. Procedural geometry and wood material avoid static-image substitutes.
 
-## 1. Atmosphere & Identity
+## Brand
+Warm, curious, tactile, unhurried. A real puzzle on a quiet desk.
+Avoid chunky dashboard panels, faux screws, ruler ornaments, decorative badges, glossy UI chrome, instructions that hide the board.
 
-The interface is a calm puzzle workbench: warm, tactile, and exact. The signature is the **specimen tray**: a graphite recessed board and piece drawer set on bone paper, with hairline measurement marks and small copper instrument details. The chrome stays nearly achromatic so the twelve enamel-like pieces remain the subject.
+## Product goals
+Recreate a physical board, explore solvable challenges, receive a guaranteed hint, reveal a complete solution.
+Pieces lift, rotate, turn over, and settle as complete connected objects.
+No account or server. Existing undo, reset, clear, hint, solve, and sound remain.
 
-### Brand
+## Personas and jobs
+- Physical-puzzle owner: match real pieces to the board and get unstuck.
+- Casual player: pick up scattered pieces and discover their orientation.
+- Keyboard/touch user: select a piece, transform with labeled controls, place without dragging.
+- Low-motion or non-WebGL device: use an equivalent semantic 2D board.
 
-- Personality: tactile, ingenious, patient, quietly playful.
-- Trust signals: real board geometry, plain-language solver state, local-compute note, deterministic hint behavior.
-- Avoid: childish toy styling, neon gaming chrome, generic SaaS cards, glass panels, unearned statistics, and official-product claims.
+## Information architecture
+One primary route. Small header contains brand, challenge selection, help, sound and view toggle.
+The first viewport is the desk with case and scattered pieces. A brief invitation lives above the scene.
+A compact dock below holds current piece, rotate/flip, undo and solve/hint.
+A small piece-letter rail provides keyboard access and precise selection without cluttering the desk.
+Status and failure recovery remain adjacent to the play surface.
+The existing /showcase route remains a working component harness.
 
-### Product goals
+## Design principles
+- Actual modeled depth, coherent lighting, and connected spherical geometry carry realism.
+- UI is peripheral to the play surface.
+- Every animation communicates pickup, orientation, placement, or feedback.
+- The solver's canonical grid is the only placement authority.
+- Color plus a persistent piece letter identifies each object.
 
-- Reproduce a physical starting position quickly.
-- Keep every manual placement legal and reversible.
-- Make hints and full solutions visibly trustworthy.
-- Fit the full workflow into one page without navigation or account friction.
-- Make direct manipulation feel physical: lift any available or placed piece, preview its footprint, transform it in hand, and receive a decisive drop result.
-- Non-goals: leaderboards, social play, analytics, multiple unsupported board geometries.
-
-### Personas and jobs
-
-- Physical-puzzle owner: transcribes placed pieces, then asks for a hint or solve.
-- Casual explorer: starts a guaranteed-solvable challenge and learns piece transformations.
-- Keyboard or low-motion user: completes the same flow without drag gestures or spatial animation.
-
-## 2. Color
-
-### Palette
-
-| Role | Token | Value | Usage |
-| --- | --- | --- | --- |
-| Canvas | `--surface-canvas` | `#F3E8D2` | Page ground |
-| Canvas shade | `--surface-canvas-deep` | `#E5D3B5` | Instrument wells, quiet bands |
-| Tray | `--surface-tray` | `#24231F` | Board and action rail |
-| Tray raised | `--surface-tray-raised` | `#34312B` | Controls, selected wells |
-| Tray recess | `--surface-tray-recess` | `#191815` | Board cells |
-| Ink | `--text-primary` | `#26231E` | Primary copy on canvas |
-| Ink muted | `--text-secondary` | `#716659` | Supporting copy |
-| Chalk | `--text-on-dark` | `#FFF7E8` | Copy on tray |
-| Copper | `--accent-copper` | `#A7582F` | Focus, selected state, primary action |
-| Copper bright | `--accent-copper-bright` | `#D18453` | Hover and active instrument details |
-| Success | `--status-success` | `#39705B` | Valid placement, solved state |
-| Error | `--status-error` | `#A43F35` | Invalid placement and unsatisfiable state |
-| Piece A-L | `--piece-a` … `--piece-l` | tangerine, plum, slate, orange, cobalt, stone, cyan, coral, red, forest, citron, cream | Piece fill only |
-
-### Rules
-
-- Chrome uses canvas, graphite, ink, and copper. Piece colors never become page accents.
-- Each piece has a letter; color never carries identity alone.
-- Focus uses a 2px dashed copper outline with 3px offset, echoing selection handles without copying Figma’s chrome.
-
-## 3. Typography
-
-### Font stack
-
-- Display: `Bricolage Grotesque`, sans-serif; weight 650–750.
-- UI/body: `DM Sans`, sans-serif; weight 400–650.
-- Numeric measurements: UI font with `font-variant-numeric: tabular-nums`.
-
-### Scale
-
-| Level | Size | Weight | Line height | Tracking | Usage |
-| --- | --- | --- | --- | --- | --- |
-| Display | `clamp(2.25rem, 5vw, 4.75rem)` | 700 | 0.96 | -0.035em | Product title |
-| H1 | `clamp(1.75rem, 3vw, 2.5rem)` | 700 | 1.05 | -0.025em | Major section heading |
-| H2 | `1.375rem` | 650 | 1.2 | -0.015em | Workbench groups |
-| Body large | `1.125rem` | 450 | 1.55 | -0.01em | Intro and state |
-| Body | `1rem` | 450 | 1.55 | -0.005em | Controls and instructions |
-| Small | `0.875rem` | 550 | 1.4 | 0 | Metadata |
-| Label | `0.75rem` | 650 | 1.2 | 0.06em | Measurements and compact status |
-
-## 4. Spacing & Layout
-
-- Base unit: 4px.
-- Tokens: `--space-1: 4px`, `--space-2: 8px`, `--space-3: 12px`, `--space-4: 16px`, `--space-5: 20px`, `--space-6: 24px`, `--space-8: 32px`, `--space-10: 40px`, `--space-12: 48px`, `--space-16: 64px`.
-- Content max: 1440px; page gutters use `clamp(16px, 3vw, 48px)`.
-- Desktop: title/status header; board plus selected-piece inspector; action rail and piece drawer below.
-- Tablet: board first; inspector and actions become a two-column band; tray wraps below.
-- Mobile: one column, the board keeps 44px cell targets and scrolls horizontally inside a clearly bounded tray; inspector follows, action dock wraps to two rows and remains in document flow. Touch accessibility outranks fitting all 11 columns into a 375px viewport.
-- The board is always 11 columns by 5 rows. Cell size uses `min()`/container width rather than hardcoded drag geometry.
-
-### Information architecture
-
-1. Product title, one-sentence task, local status.
-2. Dominant board with selected-piece preview and placement feedback.
-3. Instrument controls for orientation and solver actions.
-4. Available-piece specimen drawer.
-5. Short “How it works” disclosure and source link.
+## Visual language
+### Color
+DOM tokens: warm ivory #f5f0e7, paper #fffaf2, ink #343b32, muted ink #69705f, moss #405743, faint line #d8d4c8.
+World tokens: desk #dfc8a8, grain #b49169, tray #222824, lip #343d36, sockets #101713, brass #b3a481.
+Bead palette A–L: coral #e56d45, violet #8655be, ice #8bc9d2, tangerine #ef9a36, blue #467bd0, cream #ede0c4, cyan #3cb4bf, pink #e67fa4, ruby #cf4554, green #58a26d, lemon #d7c649, plum #ad729d.
+Success #42704f; error #a34237. Same palette drives DOM swatches and Three materials.
+### Typography
+Bricolage Grotesque for brand; DM Sans for controls; editorial display uses the self-hosted Lora family.
+Type scale: 10px rail annotation, 11px mobile helper, 12px small, 13px compact controls, 14px UI, 15px selected letter, 16px body, 20px feedback heading, 22px count, 25px wordmark, 32px mobile invitation, clamp(32px, 3.1vw, 48px) desktop invitation.
+Spacing: 4/8/12/16/20/24/32/40/48/64px. Rounded buttons 10px, paper dock 18px.
+World and DOM colors have one source in src/lib/tabletop.ts (DESK_COLORS, BEAD_COLORS); DESK_THEME supplies the corresponding CSS custom properties on the shell. Light colors are named in DESK_COLORS.
+Component geometry: header 88px desktop/72px mobile; 44px control minimum; 38px selected bead; 16px rail bead; selected-piece text region 210px minimum; 1250px dock maximum; 1640px page maximum. Camera fits 21.5 world units in width and 13.8 in height (16 overhead). Tablet controls reserve 145px above the interactive canvas.
+### Depth
+Desk receives real shadows. Case has bevels, inset round sockets, hinges and a subtle embossed title.
+Spheres use roughness .25, clearcoat .45; plastic case roughness .5. One broad upper-left key light, warm fill.
+UI paper has a soft warm offset shadow, never ornamental bevels.
 
 ## 5. Components
+- TabletopScene: responsive orthographic 3D scene; default, overhead, dragging, solved, WebGL-unavailable states.
+- BeadPiece: shared connected sphere/cylinder geometry; scattered, selected/lifted, dragging, transforming, seated.
+- KanoodleCase: rounded modeled body, 55 circular recesses, rim, hinges, latch.
+- Drop footprint: exact transformed grid cells, green for valid and red for blocked; a visible textual result accompanies color.
+- TabletopDock: selected letter, orientation, rotate left/right, flip, undo, hint, solve; disabled and working states.
+- PieceRail: 12 semantic letter buttons with color swatch, selected and placed indication.
+- PaperButton: shared semantic icon/label button, moss primary and quiet secondary, 44px target.
+- SolverFeedback: integrated visible error card with Undo/Reset; role alert.
+- AccessibleBoard: alternate semantic board with 44px cells, exact same state and operations.
+- SoundToggle: explicit persisted opt-in, no autoplay.
 
-### Instrument button
+## Motion & interaction
+Scene entry: camera settles from a slightly wider/higher view, once, <=900ms.
+Pickup raises one piece .8 world units, deepening its contact shadow.
+Rotation is a continuous quarter-turn around the group's vertical axis; flip turns the entire group 180 degrees over its local depth axis.
+Animation uses frame-rate-independent exponential damping (rate 14 position / 12 rotation) and shortest continuous angular targets, including 270→0.
+Pointer tracking uses a horizontal raycast plane; drop origin is derived from the transformed bounding box.
+Release over a valid board origin snaps the whole group into its sockets. Invalid release returns to its previous location and leaves board state unchanged.
+Keyboard A left, D/R right, F flip, Escape cancel. Labeled buttons expose the same orientation operation.
+No idle looping motion or momentum. Render only while movement/lighting updates require it.
+Reduced motion skips entrance and interpolation, retains exact orientation, footprint and text feedback.
+Motion for React animates dock/status/press; Three frame loop animates physical objects.
 
-- Structure: semantic `<button>` with Phosphor icon, visible label, optional working state.
-- Variants: primary copper, dark tray, quiet canvas.
-- States: default, hover, active press, dashed focus, disabled, working, success/error label swap.
-- Accessibility: 44px minimum target, `aria-pressed` for toggles, status text never icon-only.
-- Motion: Motion spring press (`stiffness: 420`, `damping: 30`); reduced motion removes scale.
+## Responsive behavior
+1280+: full desk composition with board centered and scattered pieces around the perimeter/foreground; controls below.
+768: scene scales to the available width; controls wrap.
+375: same complete 3D board, selected-piece rail and controls remain 44px. A top-view option improves precise targeting. 2D view provides larger scrolling cells.
+No body horizontal overflow. Controls never overlap scene hit targets.
 
-### Puzzle board and cell
-
-- Structure: labelled `role="grid"`; each active cell is a button with row/column and occupancy name.
-- Variants: empty, occupied, valid preview, invalid preview, selected piece.
-- States: hover/focus previews, click/tap placement, occupied click removal, disabled during solving.
-- Accessibility: roving-free native tab order, clear cell labels, status announced after placement.
-- Motion: piece cells fade/scale in as one placement event; no per-cell cascade.
-
-### Piece specimen
-
-- Structure: selectable button containing a compact shape diagram and letter.
-- Variants: available, selected, placed.
-- States: selected well, hover lift, active press, focus, placed/disabled.
-- Accessibility: letter plus descriptive name; selected state via `aria-pressed`.
-- Motion: shared selected-outline transition; reduced motion uses instant outline change.
-
-### Inspector
-
-- Structure: selected piece preview, rotate-left, rotate-right, flip, and remove when placed.
-- Empty state: “Choose a piece from the tray.”
-- Error state: explains why a placement failed and leaves orientation intact.
-- Motion: blur/opacity state swap adapted from beui.dev `action-swap`, 180ms ease-out.
-
-### Status strip
-
-- Structure: live region with piece count, solver state, and “solves locally” note.
-- States: ready, placing, solving, solved, unsatisfiable.
-- Motion: restrained blur/opacity swap; never loops.
-
-### Direct manipulation layer
-
-- `DragPreview`: pointer-following enamel piece with lifted depth, current orientation, and valid/invalid state. It never owns placement truth.
-- `DragInstructions`: visible instrument legend during a drag: `A` rotate left, `D`/`R` rotate right, `F` flip.
-- `SolverFeedback`: high-salience unsatisfiable-board panel with Undo and Reset actions in the same surface.
-- `SoundToggle`: explicit opt-in for synthesized pickup, rotate, flip, valid-drop, invalid-drop, solve, and error cues. No autoplay or downloaded audio asset.
-
-## 6. Motion & Interaction
-
-| Token | Value | Usage |
-| --- | --- | --- |
-| `--motion-micro` | 120ms ease-out | Color and opacity feedback |
-| `--motion-standard` | 220ms ease-in-out | Inspector/state swap |
-| placement spring | stiffness 360, damping 28, mass 0.8 | Whole-piece placement |
-| press spring | stiffness 420, damping 30, mass 0.6 | Button press |
-| drag spring | stiffness 520, damping 42, mass 0.72 | Lifted piece and drop settle |
-
-- Motion communicates selection, placement, removal, solver progress, or completion.
-- Spatial motion uses Motion for React; simple color transitions remain CSS.
-- `MotionConfig reducedMotion="user"` is mandatory. Reduced motion replaces transforms with opacity/color feedback.
-- Solver work is synchronous but staged through React transition/state messaging so the pressed control visibly enters a working state first.
-- Focal moment: a lifted piece follows the pointer as one enamel specimen while its exact footprint lights beneath it; valid release settles into the tray, invalid release retracts into a red recovery cue.
-- Gestures have no inertia or queued animation. Pointer tracking stays transform-only, board previews update from cell coordinates, and every transition remains interruptible.
-- Audio is opt-in and synthesized through Web Audio after a user gesture. Cues stay under 180ms except the solved chord, never loop, and are never the only feedback channel.
-
-## 7. Depth & Surface
-
-Strategy: mixed material depth, with a single top-left light source.
-
-- Canvas is flat with a faint paper-fiber texture built from low-contrast CSS noise-like radial marks, not a repeating grid.
-- Tray shadow: offset down/right, broad warm umber blur.
-- Tray recess: inset shadow only; cell seams use hairline copper-tinted borders.
-- Raised controls: one outer shadow and one subtle inner highlight; no border plus shadow duplication.
-- Piece material: restrained multi-stop highlight and bottom inset shade driven by each piece token.
-
-## 8. Accessibility Constraints & Accepted Debt
-
-### Constraints
-
-- WCAG 2.2 AA: 4.5:1 body contrast, 3:1 large text and non-text UI boundaries.
-- Full keyboard operation, visible focus, 44px touch targets, live status announcements, semantic buttons/grid labels.
-- The full task survives 200% zoom, 320px CSS width, coarse pointer, and `prefers-reduced-motion: reduce`.
-- Instructions never depend on drag-and-drop; click/tap placement is primary.
-- Dragging supports pointer and touch; labeled inspector buttons remain the equivalent path. During a drag, `A`, `D`/`R`, and `F` are additional shortcuts shown on screen.
-- Sound begins disabled until the user opts in and always has a persistent toggle.
-
-### Accepted debt
-
-None.
+## Accessibility
+Semantic DOM controls and live announcements supplement canvas. Piece rail is the keyboard equivalent of selecting a mesh.
+2D board supports all operations without WebGL or pointer dragging. Visible focus and native buttons.
+Reduced motion and optional audio. Real text identifies current piece and transform, preview validity and failure.
+A help disclosure explains placement, movement and shortcuts without blocking play.
 
 ## Interaction states
-
-- Loading/working: action label becomes “Solving…” or “Finding a hint…” and competing solver actions disable.
-- Empty: empty board plus “Choose a piece or start a challenge.”
-- Error: retain the board and selected piece, announce that the current arrangement has no complete solution, offer Undo or Reset.
-- Invalid drop: leave the board unchanged, mark the attempted footprint red, announce that it does not fit, and optionally play one short low cue.
-- Success: complete board, solved status, primary action becomes “New puzzle.”
-- Offline/slow network: no functional impact after the static page loads; solving is local.
+Loading: visible desk placeholder with concise loading status.
+Empty: board open, all twelve pieces on desk.
+Working: solve/hint controls disabled, clear status.
+Invalid: no board mutation, visible drop reason and return motion.
+Unsolvable: prominent in-flow feedback and recovery.
+Solved: all 55 cells filled; primary action becomes New puzzle.
+Offline: fully local after initial static assets load.
+WebGL unavailable: semantic 2D mode offered automatically.
 
 ## Content voice
-
-Warm, concise, and literal. Controls name actions (“Rotate left,” “Solve board”). Errors identify the problem and recovery. Avoid gamey hype, unexplained jargon, and fabricated performance claims.
+Short, warm, literal. “A little room to think.” is the invitation. Buttons describe real actions. No fabricated claims.
 
 ## Implementation constraints
+Next 15 / React 19 static export, existing npm toolchain. Three.js + R3F v9 implement the requested 3D feature. No physics engine or external model download.
+Reuse canonical solver, piece matrices, gameBoard and audio. Keep new modules focused and <=250 source lines.
+Split the WebGL bundle from the initial DOM shell. Clamp device pixel ratio and use bounded shadows/segments.
+Verify 3D mesh selection, dragging, turn/flip motion, occupied movement, failure recovery, keyboard/2D equivalent, reduced motion and desktop/mobile rendering before Pages deployment.
 
-- Next.js 15 App Router, React 19, Tailwind CSS 4 plus project CSS tokens.
-- Motion from `motion/react`; Phosphor icons; no Bklit charts because the product has no data-visualization need; no KokonutUI component unless a single compatible source pattern reduces code without adding shadcn infrastructure.
-- Static export for GitHub Pages; no server features or runtime API.
-- The solver and UI remain strictly typed and test-covered; source files stay within the 250 pure-LOC ceiling.
-- Fresh screenshots at 375px, 768px, and 1280px plus keyboard and reduced-motion checks are required before release.
+## Accepted debt
+No intentional functional or accessibility debt. The model is a stylized classic case, not an official product CAD asset.
 
 ## Open questions
-
-- [ ] Repository owner/name determine the final public Pages URL; deployment config derives the base path from GitHub Actions automatically.
+None blocking; classic 12-piece rectangular Kanoodle is the repository's supported edition.

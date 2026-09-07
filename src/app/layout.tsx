@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
+import { Bricolage_Grotesque, DM_Sans, Lora } from "next/font/google";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({
@@ -11,6 +11,7 @@ const body = DM_Sans({
   subsets: ["latin"],
   variable: "--font-body",
 });
+const editorial = Lora({ subsets: ['latin'], variable: '--font-editorial' });
 
 export const metadata: Metadata = {
   title: "Kanoodle Solver",
@@ -41,7 +42,7 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body className={`${display.variable} ${body.variable}`}>{children}</body>
+      <body className={`${display.variable} ${body.variable} ${editorial.variable}`}>{children}</body>
     </html>
   );
 }

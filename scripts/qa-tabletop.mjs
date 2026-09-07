@@ -1,0 +1,128 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+import { OrthographicCamera, Vector3 } from 'three';
+
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:4173/';
+const evidence = process.env.QA_EVIDENCE_DIR ?? '.omo/evidence/tabletop';
+await mkdir(evidence, { recursive: true });
+const browser = await chromium.launch({ channel: 'chrome', headless: true,
+  args: ['--enable-webgl', '--ignore-gpu-blocklist', '--use-angle=swiftshader'] });
+const errors = [];
+const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+page.on('pageerror', error => errors.push(error.message));
+await page.goto(baseURL, { waitUntil: 'networkidle' });
+await page.locator('.tabletop-canvas canvas').waitFor();
+await page.waitForTimeout(1800);
+const capture = name => page.screenshot({ path: `${evidence}/${name}.png`, fullPage: true });
+const count = n => page.getByLabel(`${n} of 12 pieces placed`).waitFor();
+async function projector() {
+  const bounds = await page.locator('.tabletop-canvas').boundingBox();
+  assert(bounds);
+  const camera = new OrthographicCamera(-bounds.width / 2, bounds.width / 2, bounds.height / 2, -bounds.height / 2, .1, 200);
+  camera.zoom = Math.min(bounds.width / 21.5, bounds.height / 13.8);
+  camera.position.set(1.2, 19, 14); camera.lookAt(0, 0, .1); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  return (x, y, z) => {
+    const v = new Vector3(x, y, z).project(camera);
+    return { x: bounds.x + (v.x + 1) * bounds.width / 2, y: bounds.y + (1 - v.y) * bounds.height / 2 };
+  };
+}
+await capture('desktop');
+await page.getByRole('button', { name: 'Piece A', exact: true }).click();
+await page.waitForTimeout(450);
+await capture('turn-before');
+await page.getByRole('button', { name: 'Rotate right', exact: true }).click();
+await page.waitForTimeout(90);
+await capture('turn-middle');
+await page.waitForTimeout(450);
+await capture('turn-after');
+assert.match(await page.locator('.hand-status').innerText(), /90°/);
+await page.getByRole('button', { name: 'Flip', exact: true }).click();
+await page.waitForTimeout(90);
+await capture('flip-middle');
+await page.waitForTimeout(450);
+await capture('flip-after');
+assert.match(await page.locator('.hand-status').innerText(), /turned over/);
+await page.keyboard.press('a'); await page.keyboard.press('f');
+await page.waitForTimeout(2200);
+let project = await projector();
+let source = project(-8.5, 1.22, -3.8);
+let target = project(-4.5, .65, -2);
+await page.mouse.move(source.x, source.y); await page.mouse.down();
+await page.mouse.move(target.x, target.y, { steps: 8 });
+assert.match(await page.locator('.desk-status').innerText(), /Fits here/);
+await capture('drop-preview');
+await page.mouse.up(); await count(1); await page.waitForTimeout(1800);
+await capture('placed');
+
+source = project(-5, .64, -3.5);
+target = project(.5, .65, -2);
+await page.mouse.move(source.x, source.y); await page.mouse.down();
+await page.mouse.move(target.x, target.y, { steps: 8 });
+await page.keyboard.press('r'); await page.keyboard.press('f');
+assert.match(await page.locator('.hand-status').innerText(), /90°.*turned over/);
+await page.mouse.up(); await count(1); await page.waitForTimeout(500);
+await page.getByRole('button', { name: '2D board', exact: true }).click();
+const movedCells = await page.locator('[role="gridcell"][data-piece="A"]').evaluateAll(elements => elements.map(e => `${e.dataset.boardX}:${e.dataset.boardY}`));
+assert.equal(movedCells.length, 5); assert(!movedCells.includes('0:0'));
+await page.getByRole('button', { name: '3D desk', exact: true }).click();
+await page.waitForTimeout(900);
+await page.getByRole('button', { name: 'Piece B', exact: true }).click();
+await page.getByRole('button', { name: 'Rotate right', exact: true }).click();
+await page.waitForTimeout(1800);
+project = await projector();
+source = project(-4.5, 1.22, 1.7);
+target = project(5, .65, .5);
+await page.mouse.move(source.x, source.y); await page.mouse.down();
+await page.mouse.move(target.x, target.y, { steps: 8 });
+await page.mouse.up(); await count(1);
+assert.match(await page.locator('.desk-status').innerText(), /doesn’t fit|Back on/);
+await page.keyboard.press('Escape');
+
+await page.getByRole('button', { name: 'Clear board', exact: true }).click();
+await page.getByRole('button', { name: '2D board', exact: true }).click();
+await page.getByRole('button', { name: 'Piece A', exact: true }).click();
+await page.getByRole('gridcell', { name: 'Row 1, column 10, empty', exact: true }).click();
+await count(1);
+await page.getByRole('button', { name: 'Solve board', exact: true }).click();
+await page.getByRole('heading', { name: 'No solution from this layout' }).waitFor();
+await page.waitForTimeout(300); await capture('no-solution');
+await page.getByRole('button', { name: 'Undo last move', exact: true }).click(); await count(0);
+await page.getByRole('button', { name: 'Solve board', exact: true }).click(); await count(12);
+assert.equal(await page.locator('[role="gridcell"][data-piece]').count(), 55);
+await page.getByRole('button', { name: '3D desk', exact: true }).click();
+await page.waitForTimeout(900); await capture('solved');
+await page.getByRole('button', { name: 'New puzzle', exact: true }).click(); await count(4);
+await page.getByRole('button', { name: 'Hint', exact: true }).click(); await count(5);
+await page.getByRole('button', { name: 'Reset challenge', exact: true }).click(); await count(4);
+await page.getByRole('button', { name: 'Enable interaction sounds', exact: true }).click();
+await page.getByRole('button', { name: 'Mute interaction sounds', exact: true }).waitFor();
+await page.getByRole('button', { name: 'View from above', exact: true }).click();
+await page.waitForTimeout(700); await capture('overhead');
+
+const responsive = [];
+for (const width of [375, 768, 1280]) {
+  const p = await browser.newPage({ viewport: { width, height: 900 } });
+  p.on('pageerror', error => errors.push(error.message));
+  await p.goto(baseURL, { waitUntil: 'networkidle' }); await p.waitForTimeout(1100);
+  assert.equal(await p.locator('.tabletop-canvas canvas').count(), 1);
+  const overflow = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+  assert(overflow <= 1, `body overflow at ${width}: ${overflow}`);
+  await p.screenshot({ path: `${evidence}/desk-${width}.png`, fullPage: true });
+  await p.goto(new URL('showcase/', baseURL).href, { waitUntil: 'networkidle' });
+  await p.screenshot({ path: `${evidence}/showcase-${width}.png`, fullPage: true });
+  responsive.push({ width, overflow }); await p.close();
+}
+const reduced = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
+await reduced.goto(baseURL, { waitUntil: 'networkidle' });
+await reduced.getByRole('button', { name: 'Piece J', exact: true }).click();
+await reduced.getByRole('button', { name: 'Flip', exact: true }).click();
+await reduced.getByRole('button', { name: 'Rotate right', exact: true }).click();
+assert.match(await reduced.locator('.hand-status').innerText(), /90°.*turned over/);
+await reduced.screenshot({ path: `${evidence}/reduced-motion.png`, fullPage: true });
+assert.deepEqual(errors, []);
+const result = { baseURL, responsive, errors, checks: ['WebGL scene', '3D turn', '3D flip', 'mesh drag and drop', 'live preview',
+  'move placed piece', 'keyboard transform while dragging', 'invalid drop preserves board', '2D keyboard equivalent', 'unsolvable recovery', '55-cell solve', 'challenge/hint/reset', 'sound opt-in', 'overhead camera', 'reduced motion'] };
+await writeFile(`${evidence}/qa.json`, JSON.stringify(result, null, 2));
+console.log(JSON.stringify(result, null, 2));
+await browser.close();
