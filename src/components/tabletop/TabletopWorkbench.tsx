@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, domAnimation, LazyMotion, MotionConfig, useReducedMotion, m } from 'motion/react';
-import { ArrowCounterClockwiseIcon, ArrowUpRightIcon, CubeIcon, GridFourIcon, QuestionIcon } from '@phosphor-icons/react';
+import { ArrowCounterClockwiseIcon, ArrowUpRightIcon, CubeIcon, GridFourIcon, PlayIcon, QuestionIcon } from '@phosphor-icons/react';
 import { useTabletop } from '@/hooks/useTabletop';
 import { DESK_THEME } from '@/lib/tabletop';
 import { SoundToggle } from '../SoundToggle';
@@ -24,7 +24,7 @@ export function TabletopWorkbench() {
   const table = useTabletop();
   const room = useRoomPreferences();
   const [flat, setFlat] = useState(false);
-  const [overhead, setOverhead] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const [help, setHelp] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const toggleDrawer = useCallback(() => setDrawerOpen(open => !open), []);
@@ -34,21 +34,24 @@ export function TabletopWorkbench() {
   const reducedMotion = hydrated && prefersReducedMotion;
   const stage = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (table.game.recovery) stage.current?.querySelector(flat ? '.flat-board-scroll' : '.tabletop-canvas')
+    if (playing) stage.current?.querySelector<HTMLSelectElement>('.challenge-picker select')?.focus({ preventScroll: true });
+  }, [playing]);
+  useEffect(() => {
+    if (playing && table.game.recovery) stage.current?.querySelector(flat ? '.flat-board-scroll' : '.tabletop-canvas')
       ?.scrollIntoView({ block: flat ? 'center' : 'start', behavior: reducedMotion ? 'instant' : 'smooth' });
-  }, [table.game.recovery, flat, reducedMotion]);
-  const unavailable = useCallback(() => setFlat(true), []);
+  }, [table.game.recovery, flat, reducedMotion, playing]);
+  const unavailable = useCallback(() => { setFlat(true); setPlaying(true); }, []);
   const status = table.returningToDesk ? `Release to return piece ${table.held?.piece.name} to the desk.`
     : table.request ? (table.valid ? 'Fits here. Release to place.' : 'Not quite. Try another spot or orientation.') : table.notice || table.game.message;
 
   return <LazyMotion features={domAnimation}><MotionConfig reducedMotion="user">
     <main className="tabletop-shell" style={DESK_THEME}>
-      <a className="desk-skip" href="#tabletop-controls">Skip to puzzle controls</a>
+      <a className="desk-skip" href={playing ? '#tabletop-controls' : '#start-game'}>{playing ? 'Skip to puzzle controls' : 'Skip to Play'}</a>
       <header className="tabletop-header">
         <a className="tabletop-brand" href="./"><span className="brand-beads" aria-hidden="true"><i /><i /><i /><i /></span><h1>Kanoodle<span>Solver</span></h1></a>
         <div className="header-tools">
           <SoundToggle enabled={table.sound.enabled} onToggle={table.sound.toggle} />
-          <button type="button" className="desk-tool" onClick={() => { setFlat(value => !value); setDrawerOpen(false); }} aria-pressed={flat}>
+          <button type="button" className="desk-tool" onClick={() => { setFlat(value => !value); setPlaying(true); setDrawerOpen(false); }} aria-pressed={flat}>
             {flat ? <CubeIcon /> : <GridFourIcon />}<span>{flat ? '3D desk' : '2D board'}</span>
           </button>
           <button type="button" className="desk-tool help-button" onClick={() => setHelp(value => !value)} aria-expanded={help} aria-controls="desk-help"><QuestionIcon /><span>How to play</span></button>
@@ -58,15 +61,15 @@ export function TabletopWorkbench() {
         <h2>Your desk, your pace.</h2><p>Pick up a piece or choose its letter below. Drag it into the case, or click a spot to place it. Green rings show a fit. Pick up any placed piece to move it, or drag it fully onto the tabletop to return it to the desk.</p>
         <p>Use <kbd>A</kbd> to turn left, <kbd>D</kbd> or <kbd>R</kbd> to turn right, <kbd>F</kbd> to flip, and <kbd>Esc</kbd> to put it back. The 2D board offers larger cells and full keyboard control.</p>
       </m.section>}</AnimatePresence>
-      <section ref={stage} className="tabletop-stage" aria-label="Interactive Kanoodle desk" data-view={flat ? 'flat' : '3d'} data-time={room.timeOfDay} style={ROOM_THEME}>
+      <section ref={stage} className="tabletop-stage" aria-label="Interactive Kanoodle desk" data-view={flat ? 'flat' : '3d'} data-playing={playing || undefined} data-time={room.timeOfDay} style={ROOM_THEME}>
         <div className="desk-intro"><h2>A little room<br />to <em>think.</em></h2><p>Twelve pieces. One satisfying fit.</p></div>
         <div className="desk-scene-tools">
-          <label className="challenge-picker"><span>Start a challenge</span><select aria-label="Challenge difficulty" defaultValue="" disabled={table.game.busy} onChange={event => {
+          {playing && <label className="challenge-picker"><span>Start a challenge</span><select aria-label="Challenge difficulty" defaultValue="" disabled={table.game.busy} onChange={event => {
             const count = Number(event.target.value);
             if (count) table.operate(() => table.game.newChallenge(count));
             event.target.value = '';
-          }}><option value="" disabled>Choose a challenge</option><option value="4">Easy · 4 pieces</option><option value="3">Medium · 3 pieces</option><option value="2">Hard · 2 pieces</option></select></label>
-          {!flat && <div className="scene-view-actions"><button type="button" className="view-angle" aria-pressed={overhead} onClick={() => setOverhead(value => !value)}>{overhead ? 'Desk view' : 'View from above'}<ArrowUpRightIcon /></button>
+          }}><option value="" disabled>Choose a challenge</option><option value="4">Easy · 4 pieces</option><option value="3">Medium · 3 pieces</option><option value="2">Hard · 2 pieces</option></select></label>}
+          {!flat && <div className="scene-view-actions">{playing && <button type="button" className="view-angle" onClick={() => { table.cancel(); setPlaying(false); setDrawerOpen(false); }}>Desk view<ArrowUpRightIcon /></button>}
             <RoomSettings preferences={room} reducedMotion={reducedMotion} />
           </div>}
         </div>
@@ -74,15 +77,17 @@ export function TabletopWorkbench() {
           ? `A wooden desk with an open drawer containing a card: ${DEDICATION}`
           : 'A wooden desk beside a countryside window, with a Kanoodle case and twelve bead pieces. Use the controls below for keyboard access.'}>
           <SceneBoundary onUnavailable={unavailable}><Scene placements={table.game.placements} held={table.held} pointer={table.pointer} dragging={table.dragging}
-            request={table.request} valid={table.valid} overhead={overhead} reducedMotion={reducedMotion} disabled={table.game.busy}
+            request={table.request} valid={table.valid} overhead={playing} reducedMotion={reducedMotion} disabled={!playing || table.game.busy}
             drawerOpen={drawerOpen} onDrawerToggle={toggleDrawer}
             recoveryNames={table.game.recovery?.removeNames ?? []}
             timeOfDay={room.timeOfDay} activity={room.activity}
             onPick={table.pick} onDrag={table.startDrag} onMove={table.move} onDrop={table.drop} onUnavailable={unavailable} /></SceneBoundary>
         </div>}
-        <span className="desk-count" aria-label={`${table.game.placements.length} of 12 pieces placed`}><strong>{table.game.placements.length}</strong> / 12 placed</span>
+        {!playing && <div className="start-game-overlay"><m.button id="start-game" type="button" className="start-game-button" whileTap={{ scale: .96 }}
+          onClick={() => { setDrawerOpen(false); setPlaying(true); }}><PlayIcon weight="fill" aria-hidden="true" />Play</m.button></div>}
+        {playing && <span className="desk-count" aria-label={`${table.game.placements.length} of 12 pieces placed`}><strong>{table.game.placements.length}</strong> / 12 placed</span>}
       </section>
-      {!flat && <RecoveryGuide table={table} />}
+      {playing && <>{!flat && <RecoveryGuide table={table} />}
       <div className="desk-status" role="status" aria-live="polite" data-invalid={table.request && !table.valid || undefined}>
         <span className="status-seed" /><span>{status}</span>
       </div>
@@ -90,10 +95,10 @@ export function TabletopWorkbench() {
         <AnimatePresence>{table.game.hasSolverError && !table.game.recovery && <SolverFeedback message={table.game.message} canUndo={table.game.canUndo}
           onUndo={() => table.operate(table.game.undo)} onReset={() => table.operate(table.game.reset)} />}</AnimatePresence>
         <TabletopControls table={table} />
-      </div>
+      </div></>}
       <footer className="tabletop-footer"><p>A quiet puzzle. Solved entirely on your device.</p><div>
-        <button type="button" disabled={table.game.busy} onClick={() => table.operate(table.game.reset)}><ArrowCounterClockwiseIcon />Reset challenge</button>
-        <button type="button" disabled={table.game.busy} onClick={() => table.operate(table.game.clear)}>Clear board</button>
+        {playing && <><button type="button" disabled={table.game.busy} onClick={() => table.operate(table.game.reset)}><ArrowCounterClockwiseIcon />Reset challenge</button>
+        <button type="button" disabled={table.game.busy} onClick={() => table.operate(table.game.clear)}>Clear board</button></>}
         <a href="https://github.com/johanjohnthomas/KanoodleSolver">View source <ArrowUpRightIcon /></a>
       </div></footer>
     </main>

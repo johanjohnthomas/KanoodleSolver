@@ -28,7 +28,7 @@ try {
     const capture = name => page.screenshot({ path: `${dir}/${prefix}-${name}.png` });
     await capture('before');
     const bounds = await page.locator('.tabletop-canvas').boundingBox(); assert(bounds);
-    const camera = sceneCamera(bounds);
+    const camera = sceneCamera(bounds, true);
     const project = vector => { const p = vector.project(camera); return { x: bounds.x + (p.x + 1) * bounds.width / 2, y: bounds.y + (1 - p.y) * bounds.height / 2 }; };
     const source = project(new Vector3(-5, .64, -3.5));
     const target = project(new Vector3(-8, .65, -2));

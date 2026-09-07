@@ -13,6 +13,7 @@ const errors = [];
 const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
 page.on('pageerror', error => errors.push(error.message));
 await page.goto(baseURL, { waitUntil: 'networkidle' });
+await page.getByRole('button', { name: 'Play', exact: true }).click();
 await page.locator('.tabletop-canvas canvas').waitFor();
 await page.waitForTimeout(1800);
 const capture = name => page.screenshot({ path: `${evidence}/${name}.png`, fullPage: true });
@@ -20,7 +21,7 @@ const count = n => page.getByLabel(`${n} of 12 pieces placed`).waitFor();
 async function projector() {
   const bounds = await page.locator('.tabletop-canvas').boundingBox();
   assert(bounds);
-  const camera = sceneCamera(bounds);
+  const camera = sceneCamera(bounds, true);
   return (x, y, z) => {
     const v = new Vector3(x, y, z).project(camera);
     return { x: bounds.x + (v.x + 1) * bounds.width / 2, y: bounds.y + (1 - v.y) * bounds.height / 2 };
@@ -97,7 +98,8 @@ await page.getByRole('button', { name: 'Hint', exact: true }).click(); await cou
 await page.getByRole('button', { name: 'Reset challenge', exact: true }).click(); await count(4);
 await page.getByRole('button', { name: 'Enable interaction sounds', exact: true }).click();
 await page.getByRole('button', { name: 'Mute interaction sounds', exact: true }).waitFor();
-await page.getByRole('button', { name: 'View from above', exact: true }).click();
+await page.getByRole('button', { name: 'Desk view', exact: true }).click();
+await page.getByRole('button', { name: 'Play', exact: true }).click();
 await page.waitForTimeout(700); await capture('overhead');
 
 const responsive = [];
@@ -115,6 +117,7 @@ for (const width of [375, 768, 1280]) {
 }
 const reduced = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
 await reduced.goto(baseURL, { waitUntil: 'networkidle' });
+await reduced.getByRole('button', { name: 'Play', exact: true }).click();
 await reduced.getByRole('button', { name: 'Piece J', exact: true }).click();
 await reduced.getByRole('button', { name: 'Flip', exact: true }).click();
 await reduced.getByRole('button', { name: 'Rotate right', exact: true }).click();

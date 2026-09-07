@@ -11,6 +11,7 @@ it('changes the room time without changing the puzzle', async () => {
   fireEvent.change(screen.getByLabelText('Time of day'), { target: { value: 'night' } });
   expect(screen.getByLabelText('Interactive Kanoodle desk').getAttribute('data-time')).toBe('night');
   expect(localStorage.getItem('kanoodle-room-time')).toBe('night');
+  fireEvent.click(screen.getByRole('button', { name: 'Play' }));
   expect(screen.getByLabelText('0 of 12 pieces placed')).toBeTruthy();
 });
 

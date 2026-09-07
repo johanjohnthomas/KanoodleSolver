@@ -50,6 +50,7 @@ describe("Kanoodle Solver page", () => {
   it("solves an empty standard board", async () => {
     // Given
     render(<Home />);
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
 
     // When
     fireEvent.click(screen.getByRole("button", { name: "Solve board" }));

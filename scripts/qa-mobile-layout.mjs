@@ -13,6 +13,7 @@ try {
     const page = await browser.newPage({ viewport: { width, height }, hasTouch: true, isMobile: true });
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(baseURL, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Play', exact: true }).tap();
     await page.locator('.tabletop-canvas canvas').waitFor();
     await page.evaluate(() => document.fonts.ready);
     await page.waitForFunction(() => document.querySelector('.tabletop-canvas canvas')?.getBoundingClientRect().height >= 300);

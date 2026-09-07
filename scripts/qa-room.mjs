@@ -39,11 +39,11 @@ try {
     assert.equal(await page.evaluate(() => scrollY), scrollBefore);
     await capture('open');
     assert.equal(await page.getByText('Made for Rach with love <3', { exact: true }).count(), 0);
-    await page.getByLabel('0 of 12 pieces placed').waitFor();
+    assert.equal(await page.getByRole('button', { name: 'Solve board', exact: true }).count(), 0);
     const openHandle = new Vector3(0, -1.15, 12.93).project(camera);
     await page.touchscreen.tap(box.x + (openHandle.x + 1) * box.width / 2, box.y + (1 - openHandle.y) * box.height / 2);
     await page.getByRole('img', { name: /Made for Rach with love <3/ }).waitFor({ state: 'detached' });
-    await page.getByRole('button', { name: 'View from above', exact: true }).tap();
+    await page.getByRole('button', { name: 'Play', exact: true }).tap();
     await page.waitForTimeout(1500);
     await stage.scrollIntoViewIfNeeded();
     await capture('overhead');

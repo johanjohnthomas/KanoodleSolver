@@ -7,11 +7,12 @@ An accessible, client-side solver for the standard 5 × 11 Kanoodle tray. Recrea
 - Complete backtracking solver across all unique rotations and reflections
 - Seeded-board validation that preserves pieces already placed
 - Hints selected only from a verified complete solution
+- Spoiler-free solvability checks that leave your board and Undo history unchanged
 - Guaranteed-solvable easy, medium, and hard starting positions
 - Pointer, touch, and keyboard-friendly placement and removal
 - Interactive 3D desk with a modeled case, recessed sockets, and connected bead pieces
 - A furnished room and countryside window
-- Seated desk perspective with Day, Sunset, and Night lighting, plus occasional birds, planes, and passing cars
+- Raised desk start screen with Day, Sunset, and Night lighting, plus occasional birds, planes, and passing cars
 - Tactile 2D tray, twelve connected piece previews, animated turns and placement, and valid/blocked footprints
 - Whole-piece animated rotation, flipping, pickup and placement with live drop previews
 - Optional sound, an overhead camera, and an equivalent keyboard-accessible 2D board
@@ -44,9 +45,15 @@ For real-browser 3D interaction and responsive checks, serve `out/` locally and 
 
 `node scripts/qa-views.mjs` checks the 2D tray, placement footprints, local orientation controls, responsive precision mode, and persisted room settings. `node scripts/qa-outdoor.mjs` captures the actual bird, plane, and car crossings using a controlled browser clock.
 
+`node scripts/qa-start-game.mjs` checks the locked start screen, Play transition, preserved puzzles, and spoiler-free solvability results across desktop, tablet, phone, landscape, and reduced motion.
+
 ## Tabletop controls
 
+Press **Play** to move from the desk start screen into the overhead game. Pieces stay still on the start screen; **Desk view** returns there without resetting your puzzle. **2D board** opens the accessible game directly.
+
 Pick a piece from the desk or its letter in the rail, then drag it into the case or click a position. Use **A** to turn left, **D/R** to turn right, **F** to flip, and **Escape** to put it back. The labeled controls do the same on touch devices. Select a placed piece to move it, or drag it fully clear of the case onto the tabletop to return it to the desk. Undo restores its original placement. The **2D board** view uses the same puzzle state and supports keyboard placement.
+
+**Check solvability** tells you only whether your current layout can be completed. It reveals no solution, hint, or pieces to remove, and does not change your board or Undo history.
 
 If an arrangement cannot be completed, **Hint** and **Solve board** highlight one smallest set of pieces to lift. Nothing is removed until you choose **Lift highlighted pieces**. The other pieces stay exactly where they are, and Undo restores the previous arrangement.
 

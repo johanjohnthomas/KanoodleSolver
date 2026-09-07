@@ -57,7 +57,7 @@ function SceneContents(props: TabletopSceneProps) {
         rotation={held?.rotation ?? placement?.rotation ?? 0} flipped={held?.flipped ?? placement?.flipped ?? false}
         angle={selected || placement ? 0 : scatter.angle} lifted={selected} seated={Boolean(placement)}
         dragging={selected && props.dragging} reducedMotion={props.reducedMotion}
-        needsAttention={props.recoveryNames.includes(piece.name)}
+        needsAttention={props.recoveryNames.includes(piece.name)} disabled={props.disabled}
         onPick={() => { if (!props.disabled) props.onPick(piece); }} onDrag={props.onDrag}
         onMove={props.onMove} onDrop={props.onDrop} />;
     })}

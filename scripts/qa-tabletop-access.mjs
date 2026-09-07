@@ -10,12 +10,13 @@ await mkdir(evidence, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 await page.goto(baseURL, { waitUntil: 'networkidle' });
+await page.getByRole('button', { name: 'Play', exact: true }).tap();
 await page.getByRole('button', { name: 'Piece A', exact: true }).tap();
 await page.locator('.tabletop-stage').scrollIntoViewIfNeeded();
 await page.waitForTimeout(1800);
 const box = await page.locator('.tabletop-canvas').boundingBox();
 assert(box);
-const camera = sceneCamera(box);
+const camera = sceneCamera(box, true);
 const project = (x, y, z) => {
   const v = new Vector3(x, y, z).project(camera);
   return { x: box.x + (v.x + 1) * box.width / 2, y: box.y + (1 - v.y) * box.height / 2 };

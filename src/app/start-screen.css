@@ -1,0 +1,13 @@
+.start-game-overlay { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 1; }
+.start-game-button { display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 160px; min-height: 56px; padding: 16px 32px; border: 0; border-radius: 12px; background: var(--desk-moss); color: var(--desk-paper); box-shadow: var(--desk-shadow); font: 500 20px/1 var(--font-display), sans-serif; cursor: pointer; pointer-events: auto; }
+.start-game-button svg { width: 24px; height: 24px; }
+.start-game-button:hover { background: var(--desk-ink); }
+.start-game-button:focus-visible { outline: 3px solid var(--desk-paper); outline-offset: 4px; }
+.tabletop-stage:not([data-playing]) .tabletop-canvas { cursor: default; }
+.solve-controls { flex-wrap: wrap; }
+@media (max-width: 1100px) { .start-game-overlay { top: 145px; } }
+@media (max-width: 600px) { .solve-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } }
+@media (max-width: 374px) {
+  .start-game-overlay { top: 220px; }
+  .tabletop-stage:not([data-playing]) .desk-scene-tools { justify-content: flex-end; }
+}

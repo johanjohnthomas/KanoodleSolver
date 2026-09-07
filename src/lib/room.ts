@@ -38,5 +38,5 @@ export const ROOM_ATMOSPHERES = {
 } as const;
 export type RoomAtmosphere = (typeof ROOM_ATMOSPHERES)[TimeOfDay];
 
-export const SEATED_VIEW = { position: [0, 8.5, 24], target: [0, -.5, -1.5], width: 28, height: 28 } as const;
+export const SEATED_VIEW = { position: [0, 12.5, 24], target: [0, -.5, -1.5], width: 28, height: 28 } as const;
 export const OVERHEAD_VIEW = { position: [0, 32, 4], target: [0, 0, 0], width: 21.5, height: 16 } as const;

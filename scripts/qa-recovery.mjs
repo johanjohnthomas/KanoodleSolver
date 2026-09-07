@@ -34,12 +34,14 @@ try {
     await page.getByRole('button', { name: 'Solve board', exact: true }).click();
     await page.getByRole('heading', { name: 'Lift 2 pieces to keep going', exact: true }).waitFor();
     await capture('desk-recovery');
-    await page.getByRole('button', { name: 'View from above', exact: true }).click();
+    await page.getByRole('button', { name: 'Desk view', exact: true }).click();
+    await page.getByRole('button', { name: 'Play', exact: true }).click();
     await page.waitForTimeout(100); await page.screenshot({ path: `${dir}/${width}-camera-middle.png` });
     await page.waitForTimeout(1400); await capture('topdown-recovery');
     await page.getByRole('button', { name: 'Desk view', exact: true }).click();
     await page.waitForTimeout(100); await page.screenshot({ path: `${dir}/${width}-camera-return.png` });
     await page.waitForTimeout(1400);
+    await page.getByRole('button', { name: 'Play', exact: true }).click();
     await page.getByRole('button', { name: 'Lift highlighted pieces', exact: true }).click();
     await page.getByLabel('1 of 12 pieces placed').waitFor();
     await page.getByRole('button', { name: '2D board', exact: true }).click();

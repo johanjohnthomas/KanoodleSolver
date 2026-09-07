@@ -12,7 +12,7 @@ import type { Piece } from '@/lib/types';
 type Props = Readonly<{
   piece: Piece; point: DeskPoint; rotation: number; flipped: boolean; angle: number;
   lifted: boolean; seated: boolean; dragging: boolean; reducedMotion: boolean;
-  needsAttention: boolean;
+  needsAttention: boolean; disabled: boolean;
   onPick: () => void; onDrag: () => void; onMove: (point: DeskPoint) => void; onDrop: (point: DeskPoint) => void;
 }>;
 const dragPlane = new Plane(new Vector3(0, 1, 0), -.65);
@@ -22,7 +22,7 @@ const planePoint = (event: ThreeEvent<PointerEvent>): DeskPoint | null => {
   return hit ? { x: hit.x, z: hit.z } : null;
 };
 
-export function BeadPiece({ piece, point, rotation, flipped, angle, lifted, seated, dragging, reducedMotion, needsAttention,
+export function BeadPiece({ piece, point, rotation, flipped, angle, lifted, seated, dragging, reducedMotion, needsAttention, disabled,
   onPick, onDrag, onMove, onDrop }: Props) {
   const positionRef = useRef<Group>(null); const turnRef = useRef<Group>(null); const flipRef = useRef<Group>(null);
   const pressed = useRef<Readonly<{ x: number; y: number }> | null>(null);
@@ -55,12 +55,13 @@ export function BeadPiece({ piece, point, rotation, flipped, angle, lifted, seat
       <group ref={turnRef}>
         <group ref={flipRef}
           onPointerDown={event => {
-            if (event.button !== 0) return;
+            if (disabled || event.button !== 0) return;
             event.stopPropagation(); pressed.current = { x: event.clientX, y: event.clientY }; didDrag.current = false;
             if (event.target && 'setPointerCapture' in event.target && typeof event.target.setPointerCapture === 'function') event.target.setPointerCapture(event.pointerId);
             onPick();
           }}
           onPointerMove={event => {
+            if (disabled) return;
             event.stopPropagation();
             if (!pressed.current) return;
             const distance = Math.hypot(event.clientX - pressed.current.x, event.clientY - pressed.current.y);
@@ -71,12 +72,12 @@ export function BeadPiece({ piece, point, rotation, flipped, angle, lifted, seat
             event.stopPropagation();
             if (event.target && 'releasePointerCapture' in event.target && typeof event.target.releasePointerCapture === 'function') event.target.releasePointerCapture(event.pointerId);
             pressed.current = null;
-            if (didDrag.current) { const next = planePoint(event); if (next) onDrop(next); }
+            if (didDrag.current && !disabled) { const next = planePoint(event); if (next) onDrop(next); }
             didDrag.current = false;
           }}
           onPointerCancel={() => { pressed.current = null; didDrag.current = false; }}
           onClick={event => event.stopPropagation()}
-          onPointerOver={event => { event.stopPropagation(); document.body.style.cursor = 'grab'; }}
+          onPointerOver={event => { if (disabled) return; event.stopPropagation(); document.body.style.cursor = 'grab'; }}
           onPointerOut={() => { document.body.style.cursor = ''; }}>
           {cells.map(cell => (
             <mesh key={`${cell.x}:${cell.y}`} position={[cell.x - (bounds.width - 1) / 2, 0, cell.y - (bounds.depth - 1) / 2]} castShadow receiveShadow>
