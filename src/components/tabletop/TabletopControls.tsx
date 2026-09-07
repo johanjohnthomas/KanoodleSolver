@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowCounterClockwiseIcon, ArrowClockwiseIcon, ArrowsHorizontalIcon, CheckIcon, LightbulbIcon, RewindIcon, XIcon } from '@phosphor-icons/react';
+import { ArrowCounterClockwiseIcon, ArrowClockwiseIcon, ArrowsHorizontalIcon, CheckIcon, LightbulbIcon, RewindIcon, ShieldCheckIcon, XIcon } from '@phosphor-icons/react';
 import { m } from 'motion/react';
 import { InstrumentButton } from '../InstrumentButton';
 import { BEAD_COLORS, beadStyle } from '@/lib/tabletop';
@@ -27,6 +27,7 @@ export function TabletopControls({ table }: Readonly<{ table: Controller }>) {
       </div>
       <div className="solve-controls">
         <InstrumentButton label="Undo" icon={<RewindIcon />} onClick={() => table.operate(game.undo)} disabled={!game.canUndo || game.busy} />
+        <InstrumentButton label="Check solvability" icon={<ShieldCheckIcon />} onClick={() => table.operate(game.checkSolvability)} disabled={game.busy} />
         <InstrumentButton label="Hint" icon={<LightbulbIcon />} onClick={() => table.operate(game.getHint)} disabled={game.busy || game.placements.length === 12} />
         <InstrumentButton label={game.busy ? 'Working…' : game.placements.length === 12 ? 'New puzzle' : 'Solve board'} tone="copper" icon={<CheckIcon />}
           onClick={() => table.operate(game.placements.length === 12 ? () => game.newChallenge(4) : game.solveBoard)} disabled={game.busy} />

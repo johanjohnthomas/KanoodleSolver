@@ -127,6 +127,19 @@ export function useKanoodleGame() {
     [board, canPlace, commit, dropPiece, orientation, placements, selectedPiece],
   );
 
+  const checkSolvability = useCallback(() => {
+    setBusy(true);
+    setRecovery(null);
+    setMessage('Checking whether this layout can be completed…');
+    window.setTimeout(() => {
+      const solution = new KanoodleSolver(board, layout).solve();
+      setMessage(solution === null
+        ? 'This layout cannot be completed as it is. No pieces changed.'
+        : 'This layout is solvable. No pieces changed.');
+      setBusy(false);
+    }, 20);
+  }, [board]);
+
   const requestAssistance = useCallback((mode: 'solve' | 'hint') => {
     setBusy(true);
     setRecovery(null);
@@ -228,6 +241,7 @@ export function useKanoodleGame() {
     busy,
     canPlace,
     canDrop,
+    checkSolvability,
     clear,
     dropPiece,
     getHint,
