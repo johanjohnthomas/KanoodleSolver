@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
-import { OrthographicCamera, Vector3 } from 'three';
+import { Vector3 } from 'three';
+import { sceneCamera } from './scene-camera.mjs';
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:4173/';
 const evidence = process.env.QA_EVIDENCE_DIR || '.omo/evidence/room';
@@ -26,10 +27,7 @@ try {
     await capture('closed');
     const box = await page.locator('.tabletop-canvas').boundingBox();
     assert(box);
-    const camera = new OrthographicCamera(-box.width / 2, box.width / 2, box.height / 2, -box.height / 2, .1, 200);
-    camera.zoom = Math.min(box.width / 28, box.height / 28);
-    camera.position.set(1.2, 19, 14); camera.lookAt(0, 1, -.5);
-    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    const camera = sceneCamera(box);
     const handle = new Vector3(0, -1.15, 8.93).project(camera);
     await page.touchscreen.tap(box.x + (handle.x + 1) * box.width / 2, box.y + (1 - handle.y) * box.height / 2);
     await page.getByRole('button', { name: 'Close desk drawer', exact: true }).waitFor();

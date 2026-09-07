@@ -1,64 +1,47 @@
 'use client';
 
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef, useState } from 'react';
-import { OrthographicCamera, Vector3, PCFSoftShadowMap } from 'three';
+import { Canvas } from '@react-three/fiber';
+import { useEffect, useState } from 'react';
+import { PCFSoftShadowMap } from 'three';
 import { BeadPiece } from './BeadPiece';
 import { KanoodleCase } from './KanoodleCase';
 import { DeskFurniture } from './DeskFurniture';
 import { RoomWindow } from './RoomWindow';
-import { ROOM_COLORS } from '@/lib/room';
+import { ROOM_COLORS, ROOM_ATMOSPHERES, SEATED_VIEW } from '@/lib/room';
+import type { TimeOfDay } from '@/lib/room';
+import { SceneCamera } from './SceneCamera';
+import { DeskLamp } from './DeskLamp';
 import { DESK_COLORS, SCATTER, placementCenter } from '@/lib/tabletop';
 import type { DeskPoint, HeldPiece } from '@/lib/tabletop';
 import type { PieceDropRequest } from '@/lib/gameBoard';
 import { PIECES } from '@/lib/pieces';
 import type { Piece, PlacedPiece } from '@/lib/types';
 
-const deskCamera = new Vector3(1.2, 19, 14);
-const topCamera = new Vector3(0, 25, .01);
-
 export type TabletopSceneProps = Readonly<{
   placements: readonly PlacedPiece[]; held: HeldPiece | null; pointer: DeskPoint | null; dragging: boolean;
   request: PieceDropRequest | null; valid: boolean; overhead: boolean; reducedMotion: boolean; disabled: boolean;
   drawerOpen: boolean; onDrawerToggle: () => void;
+  timeOfDay: TimeOfDay; activity: boolean;
   onPick: (piece: Piece) => void; onDrag: () => void; onMove: (point: DeskPoint) => void;
   onDrop: (point: DeskPoint) => void; onUnavailable: () => void;
 }>;
 
-function CameraRig({ overhead, reducedMotion }: Readonly<{ overhead: boolean; reducedMotion: boolean }>) {
-  const { camera, size, invalidate } = useThree();
-  const entered = useRef(false);
-  useEffect(() => {
-    if (camera instanceof OrthographicCamera) {
-      camera.zoom = Math.min(size.width / (overhead ? 21.5 : 28), size.height / (overhead ? 16 : 28));
-      camera.updateProjectionMatrix();
-    }
-    invalidate();
-  }, [camera, size, overhead, invalidate]);
-  useFrame((state, dt) => {
-    const target = overhead ? topCamera : deskCamera;
-    if (reducedMotion) camera.position.copy(target);
-    else camera.position.lerp(target, 1 - Math.exp(-5 * Math.min(dt, 1 / 30)));
-    camera.lookAt(0, overhead ? 0 : 1, overhead ? .1 : -.5);
-    if (camera.position.distanceTo(target) > .001 || !entered.current) { state.invalidate(); entered.current = true; }
-  });
-  return null;
-}
-
 function SceneContents(props: TabletopSceneProps) {
+  const atmosphere = ROOM_ATMOSPHERES[props.timeOfDay];
   return <>
-    <CameraRig overhead={props.overhead} reducedMotion={props.reducedMotion} />
-    <ambientLight intensity={1.1} color={DESK_COLORS.ambient} />
-    <hemisphereLight args={[DESK_COLORS.sky, DESK_COLORS.ground, 1.5]} />
-    <directionalLight position={[-8, 16, -5]} intensity={3.3} color={DESK_COLORS.key} castShadow
+    <SceneCamera overhead={props.overhead} reducedMotion={props.reducedMotion} />
+    <ambientLight intensity={atmosphere.ambientPower} color={atmosphere.ambient} />
+    <hemisphereLight args={[atmosphere.skyLight, atmosphere.groundLight, atmosphere.hemispherePower]} />
+    <directionalLight position={[-8, 16, -5]} intensity={atmosphere.keyPower} color={atmosphere.key} castShadow
       shadow-mapSize={[2048, 2048]} shadow-camera-left={-15} shadow-camera-right={15}
       shadow-camera-top={14} shadow-camera-bottom={-14} shadow-normalBias={.035} shadow-bias={-.00015} shadow-radius={4} />
-    <directionalLight position={[8, 8, 5]} intensity={.6} color={DESK_COLORS.fill} />
-    {!props.overhead && <RoomWindow />}
+    <directionalLight position={[8, 8, 5]} intensity={atmosphere.fillPower} color={atmosphere.fill} />
+    {!props.overhead && <RoomWindow atmosphere={atmosphere} activity={props.activity} reducedMotion={props.reducedMotion} />}
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -6.8, 0]} receiveShadow>
       <planeGeometry args={[160, 160]} /><meshStandardMaterial color={ROOM_COLORS.floor} roughness={1} />
     </mesh>
     <DeskFurniture open={props.drawerOpen} reducedMotion={props.reducedMotion} onToggle={props.onDrawerToggle} />
+    <DeskLamp atmosphere={atmosphere} />
     <KanoodleCase request={props.request} valid={props.valid}
       onHover={point => { if (props.held && !props.dragging) props.onMove(point); }}
       onPlace={point => { if (props.held && !props.disabled && !props.dragging) props.onDrop(point); }} />
@@ -90,8 +73,8 @@ export function TabletopScene(props: TabletopSceneProps) {
     setSupported(true);
   }, [onUnavailable]);
   if (!supported) return <p className="scene-loading">Setting your pieces on the desk…</p>;
-  return <Canvas orthographic shadows={{ type: PCFSoftShadowMap }} frameloop="demand" dpr={[1, 1.75]}
-    camera={{ position: [2, 23, 18], zoom: 40, near: .1, far: 200 }}
+  return <Canvas shadows={{ type: PCFSoftShadowMap }} frameloop="demand" dpr={[1, 1.75]}
+    camera={{ position: [...SEATED_VIEW.position], fov: 50, near: .1, far: 200 }}
     gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
     onCreated={({ gl }) => { gl.setClearColor(DESK_COLORS.desk); }}
     fallback={<button type="button" onClick={props.onUnavailable}>Open the accessible 2D board</button>}>

@@ -11,7 +11,9 @@ import { TabletopControls } from './TabletopControls';
 import { AccessibleBoard } from './AccessibleBoard';
 import { SolverFeedback } from '../SolverFeedback';
 import { SceneBoundary } from './SceneBoundary';
-import { DEDICATION } from '@/lib/room';
+import { DEDICATION, ROOM_THEME } from '@/lib/room';
+import { useRoomPreferences } from '@/hooks/useRoomPreferences';
+import { RoomSettings } from './RoomSettings';
 
 const Scene = dynamic(() => import('./TabletopScene').then(module => module.TabletopScene), {
   ssr: false, loading: () => <div className="scene-loading" role="status">Setting your pieces on the desk…</div>,
@@ -19,6 +21,7 @@ const Scene = dynamic(() => import('./TabletopScene').then(module => module.Tabl
 
 export function TabletopWorkbench() {
   const table = useTabletop();
+  const room = useRoomPreferences();
   const [flat, setFlat] = useState(false);
   const [overhead, setOverhead] = useState(false);
   const [help, setHelp] = useState(false);
@@ -49,7 +52,7 @@ export function TabletopWorkbench() {
         <h2>Your desk, your pace.</h2><p>Pick up a piece or choose its letter below. Drag it into the case, or click a spot to place it. Green rings show a fit. Pick up any placed piece to move it.</p>
         <p>Use <kbd>A</kbd> to turn left, <kbd>D</kbd> or <kbd>R</kbd> to turn right, <kbd>F</kbd> to flip, and <kbd>Esc</kbd> to put it back. The 2D board offers larger cells and full keyboard control.</p>
       </m.section>}</AnimatePresence>
-      <section className="tabletop-stage" aria-label="Interactive Kanoodle desk" data-view={flat ? 'flat' : '3d'}>
+      <section className="tabletop-stage" aria-label="Interactive Kanoodle desk" data-view={flat ? 'flat' : '3d'} data-time={room.timeOfDay} style={ROOM_THEME}>
         <div className="desk-intro"><h2>A little room<br />to <em>think.</em></h2><p>Twelve pieces. One satisfying fit.</p></div>
         <div className="desk-scene-tools">
           <label className="challenge-picker"><span>Start a challenge</span><select aria-label="Challenge difficulty" defaultValue="" disabled={table.game.busy} onChange={event => {
@@ -57,12 +60,15 @@ export function TabletopWorkbench() {
             if (count) table.operate(() => table.game.newChallenge(count));
             event.target.value = '';
           }}><option value="" disabled>Choose a challenge</option><option value="4">Easy · 4 pieces</option><option value="3">Medium · 3 pieces</option><option value="2">Hard · 2 pieces</option></select></label>
-          {!flat && <button type="button" className="view-angle" aria-pressed={overhead} onClick={() => setOverhead(value => !value)}>{overhead ? 'Desk view' : 'View from above'}<ArrowUpRightIcon /></button>}
+          {!flat && <div className="scene-view-actions"><button type="button" className="view-angle" aria-pressed={overhead} onClick={() => setOverhead(value => !value)}>{overhead ? 'Desk view' : 'View from above'}<ArrowUpRightIcon /></button>
+            <RoomSettings preferences={room} reducedMotion={reducedMotion} />
+          </div>}
         </div>
         {flat ? <AccessibleBoard table={table} /> : <div className="tabletop-canvas" role="img" aria-label="A wooden desk beside a countryside window, with a Kanoodle case, twelve bead pieces, and a drawer. Use the controls below for keyboard access.">
           <SceneBoundary onUnavailable={unavailable}><Scene placements={table.game.placements} held={table.held} pointer={table.pointer} dragging={table.dragging}
             request={table.request} valid={table.valid} overhead={overhead} reducedMotion={reducedMotion} disabled={table.game.busy}
             drawerOpen={drawerOpen} onDrawerToggle={toggleDrawer}
+            timeOfDay={room.timeOfDay} activity={room.activity}
             onPick={table.pick} onDrag={table.startDrag} onMove={table.move} onDrop={table.drop} onUnavailable={unavailable} /></SceneBoundary>
         </div>}
         <button type="button" className="drawer-toggle" aria-expanded={drawerOpen} aria-controls="drawer-note" onClick={toggleDrawer}>

@@ -1,0 +1,26 @@
+.scene-view-actions { display: flex; align-items: center; gap: 8px; }
+.room-settings { position: relative; color: var(--desk-ink); }
+.room-settings summary { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; cursor: pointer; font-size: 12px; list-style: none; }
+.room-settings summary::-webkit-details-marker { display: none; }
+.room-settings summary svg { width: 18px; height: 18px; }
+.room-settings summary:focus-visible { outline: 2px solid var(--desk-moss); outline-offset: 3px; border-radius: 4px; }
+.room-settings-panel { position: absolute; top: calc(100% + 8px); right: 0; width: 240px; max-width: calc(100vw - 32px); padding: 20px; z-index: 8; border-radius: 12px; background: var(--desk-paper); color: var(--desk-ink); box-shadow: var(--desk-shadow); }
+.room-time-label { display: flex; flex-direction: column; gap: 8px; font-size: 13px; text-align: left; }
+.room-time-label select { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--desk-line); border-radius: 8px; background: var(--desk-paper); color: var(--desk-ink); }
+.room-activity-label { display: flex; min-height: 44px; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; cursor: pointer; }
+.room-activity-label input { width: 18px; height: 18px; accent-color: var(--desk-moss); }
+.room-settings-panel p { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--desk-muted); text-align: left; }
+.tabletop-stage[data-view="3d"][data-time="night"] { background: var(--room-night-background); }
+.tabletop-stage[data-view="3d"][data-time="night"] .desk-intro h2,
+.tabletop-stage[data-view="3d"][data-time="night"] .desk-count,
+.tabletop-stage[data-view="3d"][data-time="night"] .view-angle,
+.tabletop-stage[data-view="3d"][data-time="night"] .room-settings summary,
+.tabletop-stage[data-view="3d"][data-time="night"] .challenge-picker > span { color: var(--room-night-text); }
+.tabletop-stage[data-view="3d"][data-time="night"] .desk-intro h2 em { color: var(--room-night-accent); }
+.tabletop-stage[data-view="3d"][data-time="night"] .desk-intro p { color: var(--room-night-muted); }
+.tabletop-stage[data-view="3d"][data-time="sunset"] { background: var(--room-sunset-background); }
+@media (max-width: 600px) {
+  .scene-view-actions { gap: 4px; }
+  .room-settings summary { min-width: 44px; }
+  .room-settings summary span { display: none; }
+}

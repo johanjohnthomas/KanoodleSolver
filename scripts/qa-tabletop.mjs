@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { OrthographicCamera, Vector3 } from 'three';
+import { Vector3 } from 'three';
+import { sceneCamera } from './scene-camera.mjs';
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:4173/';
 const evidence = process.env.QA_EVIDENCE_DIR ?? '.omo/evidence/tabletop';
@@ -19,9 +20,7 @@ const count = n => page.getByLabel(`${n} of 12 pieces placed`).waitFor();
 async function projector() {
   const bounds = await page.locator('.tabletop-canvas').boundingBox();
   assert(bounds);
-  const camera = new OrthographicCamera(-bounds.width / 2, bounds.width / 2, bounds.height / 2, -bounds.height / 2, .1, 200);
-  camera.zoom = Math.min(bounds.width / 28, bounds.height / 28);
-  camera.position.set(1.2, 19, 14); camera.lookAt(0, 1, -.5); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  const camera = sceneCamera(bounds);
   return (x, y, z) => {
     const v = new Vector3(x, y, z).project(camera);
     return { x: bounds.x + (v.x + 1) * bounds.width / 2, y: bounds.y + (1 - v.y) * bounds.height / 2 };

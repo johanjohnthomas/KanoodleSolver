@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
-import { OrthographicCamera, Vector3 } from 'three';
+import { Vector3 } from 'three';
+import { sceneCamera } from './scene-camera.mjs';
 import assert from 'node:assert/strict';
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:4173/';
@@ -14,9 +15,7 @@ await page.locator('.tabletop-stage').scrollIntoViewIfNeeded();
 await page.waitForTimeout(1800);
 const box = await page.locator('.tabletop-canvas').boundingBox();
 assert(box);
-const camera = new OrthographicCamera(-box.width / 2, box.width / 2, box.height / 2, -box.height / 2, .1, 200);
-camera.zoom = Math.min(box.width / 28, box.height / 28);
-camera.position.set(1.2, 19, 14); camera.lookAt(0, 1, -.5); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+const camera = sceneCamera(box);
 const project = (x, y, z) => {
   const v = new Vector3(x, y, z).project(camera);
   return { x: box.x + (v.x + 1) * box.width / 2, y: box.y + (1 - v.y) * box.height / 2 };
