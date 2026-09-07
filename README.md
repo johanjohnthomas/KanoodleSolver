@@ -10,6 +10,7 @@ An accessible, client-side solver for the standard 5 × 11 Kanoodle tray. Recrea
 - Guaranteed-solvable easy, medium, and hard starting positions
 - Pointer, touch, and keyboard-friendly placement and removal
 - Interactive 3D desk with a modeled case, recessed sockets, and connected bead pieces
+- A furnished room, countryside window, and a sliding desk drawer with a personal note
 - Whole-piece animated rotation, flipping, pickup and placement with live drop previews
 - Optional sound, an overhead camera, and an equivalent keyboard-accessible 2D board
 - Responsive interface with reduced-motion and non-WebGL support
@@ -36,9 +37,13 @@ The static export is written to `out/`.
 
 For real-browser 3D interaction and responsive checks, serve `out/` locally and run `node scripts/qa-tabletop.mjs` (requires Chrome). Set `PLAYWRIGHT_BASE_URL` to test another deployment. Screenshots and results are saved under `.omo/evidence/tabletop/`.
 
+`node scripts/qa-room.mjs` checks the physical drawer, readable note, touch and keyboard controls, alternate views, and reduced motion across desktop, tablet, phone, and landscape layouts.
+
 ## Tabletop controls
 
 Pick a piece from the desk or its letter in the rail, then drag it into the case or click a position. Use **A** to turn left, **D/R** to turn right, **F** to flip, and **Escape** to put it back. The labeled controls do the same on touch devices. Select a placed piece to move it or return it to the desk. The **2D board** view uses the same puzzle state and supports keyboard placement.
+
+Tap the desk's drawer handle to open it, or use **Open desk drawer** below the scene. The note is also available in overhead and 2D views without changing your puzzle.
 
 ## GitHub Pages
 

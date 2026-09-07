@@ -4,6 +4,7 @@
 Active, 2026-09-07. The user's current brief replaces the previous specimen-workbench world with a physical 3D tabletop. Historical generated comps are no longer visual targets.
 Product truth: PRODUCT.md, canonical 5 × 11 board, twelve piece matrices, exact solver, existing interaction tests.
 Direction is pinned by the user: warm desk, realistic Kanoodle case, scattered bead pieces, visible rotation/flip animation. Impeccable's direction seed was consulted; the pinned physical scene takes precedence over its unrelated challengers.
+The room extension preserves this world: a finite oak desk with legs, a framed window onto a quiet green countryside, and a sliding drawer containing the exact dedication “Made for Rach with love <3”.
 
 ## 0. Research Log
 - Existing UI review: large framed panels and square cells obscure the physical puzzle. Keep warmth; replace the framing and specimen drawer.
@@ -52,8 +53,8 @@ Success #42704f; error #a34237. Same palette drives DOM swatches and Three mater
 Bricolage Grotesque for brand; DM Sans for controls; editorial display uses the self-hosted Lora family.
 Type scale: 10px rail annotation, 11px mobile helper, 12px small, 13px compact controls, 14px UI, 15px selected letter, 16px body, 20px feedback heading, 22px count, 25px wordmark, 32px mobile invitation, clamp(32px, 3.1vw, 48px) desktop invitation.
 Spacing: 4/8/12/16/20/24/32/40/48/64px. Rounded buttons 10px, paper dock 18px.
-World and DOM colors have one source in src/lib/tabletop.ts (DESK_COLORS, BEAD_COLORS); DESK_THEME supplies the corresponding CSS custom properties on the shell. Light colors are named in DESK_COLORS.
-Component geometry: header 88px desktop/72px mobile; 44px control minimum; 38px selected bead; 16px rail bead; selected-piece text region 210px minimum; 1250px dock maximum; 1640px page maximum. Camera fits 21.5 world units in width and 13.8 in height (16 overhead). Tablet controls reserve 145px above the interactive canvas.
+Puzzle and DOM colors live in src/lib/tabletop.ts (DESK_COLORS, BEAD_COLORS); DESK_THEME supplies the corresponding CSS custom properties on the shell. Room-only materials and the dedication live in src/lib/room.ts. Light colors are named in DESK_COLORS.
+Component geometry: header 88px desktop/72px mobile; 44px control minimum; 38px selected bead; 16px rail bead; selected-piece text region 210px minimum; 1250px dock maximum; 1640px page maximum. The overhead camera fits 21.5 × 16 world units; room framing is specified under Motion & interaction. Tablet controls reserve 145px above the interactive canvas.
 ### Depth
 Desk receives real shadows. Case has bevels, inset round sockets, hinges and a subtle embossed title.
 Spheres use roughness .25, clearcoat .45; plastic case roughness .5. One broad upper-left key light, warm fill.
@@ -61,6 +62,9 @@ UI paper has a soft warm offset shadow, never ornamental bevels.
 
 ## 5. Components
 - TabletopScene: responsive orthographic 3D scene; default, overhead, dragging, solved, WebGL-unavailable states.
+- RoomWindow: framed glazing, sill, sky, layered hills and trees; hidden in overhead mode to keep the puzzle unobstructed.
+- DeskFurniture: finite oak top, apron, legs, brass handle, lined sliding drawer and textured paper dedication; open/closed and reduced-motion states.
+- Drawer disclosure: semantic 44px control and non-modal readable note, sharing state with the mesh handle in all views.
 - BeadPiece: shared connected sphere/cylinder geometry; scattered, selected/lifted, dragging, transforming, seated.
 - KanoodleCase: rounded modeled body, 55 circular recesses, rim, hinges, latch.
 - Drop footprint: exact transformed grid cells, green for valid and red for blocked; a visible textual result accompanies color.
@@ -72,6 +76,9 @@ UI paper has a soft warm offset shadow, never ornamental bevels.
 - SoundToggle: explicit persisted opt-in, no autoplay.
 
 ## Motion & interaction
+Room discovery: the drawer is the single new authored moment. Tapping its wooden front or the equivalent 44px DOM control slides the drawer forward 4 world units, revealing a paper card. A legible in-flow dedication supplements the textured physical card; it never traps focus or blocks the puzzle. Opening scrolls only as far as necessary to reveal the readable note, so short phones do not require a second gesture. Closing reverses the same interruptible motion. Reduced motion sets the end position and scroll immediately. No unsolicited sound or ambient loops.
+Room materials extend the existing oak/ivory/moss palette with plaster #e8dfcf, floor #c6b69d, window trim #faf3e5, sky #b6d9df, distant hills #a6bfa5, near hills #708e6d and drawer lining #68715c. The geometry, frame, handle, and note are live meshes, not a flattened scene image.
+The desk camera fits 28 world units wide / 28 tall and looks at (0, 1, -0.5); the overhead puzzle camera retains the original close framing and hides the room walls. The drawer remains available through semantic controls in overhead and 2D modes. Desktop stage height is clamp(620px, 75vh, 840px); phone controls reserve 145px above the room canvas (220px below 375px).
 Scene entry: camera settles from a slightly wider/higher view, once, <=900ms.
 Pickup raises one piece .8 world units, deepening its contact shadow.
 Rotation is a continuous quarter-turn around the group's vertical axis; flip turns the entire group 180 degrees over its local depth axis.

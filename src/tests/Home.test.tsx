@@ -1,12 +1,32 @@
 import { describe, expect, it } from "@jest/globals";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import Home from "../app/page";
 
 // WebGL is exercised in the real-browser scene checks; jsdom covers semantic controls.
 jest.mock('@/components/tabletop/TabletopScene', () => ({ TabletopScene: () => null }));
+const scrollIntoView = jest.fn();
+Element.prototype.scrollIntoView = scrollIntoView;
 
 describe("Kanoodle Solver page", () => {
+  it("reveals the dedication when the drawer is opened without changing the puzzle", async () => {
+    await act(async () => { render(<Home />); });
+    expect(screen.queryByText('Made for Rach with love <3')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Open desk drawer' }));
+    expect(screen.getByText('Made for Rach with love <3')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Close desk drawer' }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByLabelText('0 of 12 pieces placed')).toBeTruthy();
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', behavior: 'smooth' });
+  });
+
+  it("puts the note away when the drawer is closed", async () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open desk drawer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close desk drawer' }));
+    await waitFor(() => expect(screen.queryByText('Made for Rach with love <3')).toBeNull());
+    expect(screen.getByRole('button', { name: 'Open desk drawer' }).getAttribute('aria-expanded')).toBe('false');
+  });
+
   it("renders the complete standard tray and piece set", () => {
     // Given / When
     render(<Home />);

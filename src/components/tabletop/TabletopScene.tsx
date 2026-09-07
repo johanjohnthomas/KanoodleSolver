@@ -1,11 +1,13 @@
 'use client';
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { OrthographicCamera, Vector3, PCFSoftShadowMap } from 'three';
 import { BeadPiece } from './BeadPiece';
 import { KanoodleCase } from './KanoodleCase';
-import { deskTexture } from './sceneGeometry';
+import { DeskFurniture } from './DeskFurniture';
+import { RoomWindow } from './RoomWindow';
+import { ROOM_COLORS } from '@/lib/room';
 import { DESK_COLORS, SCATTER, placementCenter } from '@/lib/tabletop';
 import type { DeskPoint, HeldPiece } from '@/lib/tabletop';
 import type { PieceDropRequest } from '@/lib/gameBoard';
@@ -18,6 +20,7 @@ const topCamera = new Vector3(0, 25, .01);
 export type TabletopSceneProps = Readonly<{
   placements: readonly PlacedPiece[]; held: HeldPiece | null; pointer: DeskPoint | null; dragging: boolean;
   request: PieceDropRequest | null; valid: boolean; overhead: boolean; reducedMotion: boolean; disabled: boolean;
+  drawerOpen: boolean; onDrawerToggle: () => void;
   onPick: (piece: Piece) => void; onDrag: () => void; onMove: (point: DeskPoint) => void;
   onDrop: (point: DeskPoint) => void; onUnavailable: () => void;
 }>;
@@ -27,7 +30,7 @@ function CameraRig({ overhead, reducedMotion }: Readonly<{ overhead: boolean; re
   const entered = useRef(false);
   useEffect(() => {
     if (camera instanceof OrthographicCamera) {
-      camera.zoom = Math.min(size.width / 21.5, size.height / (overhead ? 16 : 13.8));
+      camera.zoom = Math.min(size.width / (overhead ? 21.5 : 28), size.height / (overhead ? 16 : 28));
       camera.updateProjectionMatrix();
     }
     invalidate();
@@ -36,18 +39,10 @@ function CameraRig({ overhead, reducedMotion }: Readonly<{ overhead: boolean; re
     const target = overhead ? topCamera : deskCamera;
     if (reducedMotion) camera.position.copy(target);
     else camera.position.lerp(target, 1 - Math.exp(-5 * Math.min(dt, 1 / 30)));
-    camera.lookAt(0, 0, .1);
+    camera.lookAt(0, overhead ? 0 : 1, overhead ? .1 : -.5);
     if (camera.position.distanceTo(target) > .001 || !entered.current) { state.invalidate(); entered.current = true; }
   });
   return null;
-}
-
-function Desk() {
-  const texture = useMemo(deskTexture, []);
-  useEffect(() => () => texture.dispose(), [texture]);
-  return <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -.12, 0]} receiveShadow>
-    <planeGeometry args={[160, 160]} /><meshStandardMaterial map={texture} roughness={.86} />
-  </mesh>;
 }
 
 function SceneContents(props: TabletopSceneProps) {
@@ -59,7 +54,11 @@ function SceneContents(props: TabletopSceneProps) {
       shadow-mapSize={[2048, 2048]} shadow-camera-left={-15} shadow-camera-right={15}
       shadow-camera-top={14} shadow-camera-bottom={-14} shadow-normalBias={.035} shadow-bias={-.00015} shadow-radius={4} />
     <directionalLight position={[8, 8, 5]} intensity={.6} color={DESK_COLORS.fill} />
-    <Desk />
+    {!props.overhead && <RoomWindow />}
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -6.8, 0]} receiveShadow>
+      <planeGeometry args={[160, 160]} /><meshStandardMaterial color={ROOM_COLORS.floor} roughness={1} />
+    </mesh>
+    <DeskFurniture open={props.drawerOpen} reducedMotion={props.reducedMotion} onToggle={props.onDrawerToggle} />
     <KanoodleCase request={props.request} valid={props.valid}
       onHover={point => { if (props.held && !props.dragging) props.onMove(point); }}
       onPlace={point => { if (props.held && !props.disabled && !props.dragging) props.onDrop(point); }} />

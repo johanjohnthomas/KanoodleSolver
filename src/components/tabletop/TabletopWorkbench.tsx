@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, domAnimation, LazyMotion, MotionConfig, useReducedMotion, m } from 'motion/react';
 import { ArrowCounterClockwiseIcon, ArrowUpRightIcon, CubeIcon, GridFourIcon, QuestionIcon } from '@phosphor-icons/react';
 import { useTabletop } from '@/hooks/useTabletop';
@@ -11,6 +11,7 @@ import { TabletopControls } from './TabletopControls';
 import { AccessibleBoard } from './AccessibleBoard';
 import { SolverFeedback } from '../SolverFeedback';
 import { SceneBoundary } from './SceneBoundary';
+import { DEDICATION } from '@/lib/room';
 
 const Scene = dynamic(() => import('./TabletopScene').then(module => module.TabletopScene), {
   ssr: false, loading: () => <div className="scene-loading" role="status">Setting your pieces on the desk…</div>,
@@ -21,7 +22,13 @@ export function TabletopWorkbench() {
   const [flat, setFlat] = useState(false);
   const [overhead, setOverhead] = useState(false);
   const [help, setHelp] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const toggleDrawer = useCallback(() => setDrawerOpen(open => !open), []);
   const reducedMotion = useReducedMotion() ?? false;
+  const note = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (drawerOpen) note.current?.scrollIntoView({ block: 'nearest', behavior: reducedMotion ? 'instant' : 'smooth' });
+  }, [drawerOpen, reducedMotion]);
   const unavailable = useCallback(() => setFlat(true), []);
   const status = table.request ? (table.valid ? 'Fits here. Release to place.' : 'Not quite. Try another spot or orientation.') : table.notice || table.game.message;
 
@@ -52,13 +59,23 @@ export function TabletopWorkbench() {
           }}><option value="" disabled>Choose a challenge</option><option value="4">Easy · 4 pieces</option><option value="3">Medium · 3 pieces</option><option value="2">Hard · 2 pieces</option></select></label>
           {!flat && <button type="button" className="view-angle" aria-pressed={overhead} onClick={() => setOverhead(value => !value)}>{overhead ? 'Desk view' : 'View from above'}<ArrowUpRightIcon /></button>}
         </div>
-        {flat ? <AccessibleBoard table={table} /> : <div className="tabletop-canvas" role="img" aria-label="Three-dimensional Kanoodle case and twelve colorful bead pieces. Use the piece buttons below for keyboard control.">
+        {flat ? <AccessibleBoard table={table} /> : <div className="tabletop-canvas" role="img" aria-label="A wooden desk beside a countryside window, with a Kanoodle case, twelve bead pieces, and a drawer. Use the controls below for keyboard access.">
           <SceneBoundary onUnavailable={unavailable}><Scene placements={table.game.placements} held={table.held} pointer={table.pointer} dragging={table.dragging}
             request={table.request} valid={table.valid} overhead={overhead} reducedMotion={reducedMotion} disabled={table.game.busy}
+            drawerOpen={drawerOpen} onDrawerToggle={toggleDrawer}
             onPick={table.pick} onDrag={table.startDrag} onMove={table.move} onDrop={table.drop} onUnavailable={unavailable} /></SceneBoundary>
         </div>}
+        <button type="button" className="drawer-toggle" aria-expanded={drawerOpen} aria-controls="drawer-note" onClick={toggleDrawer}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 8h18v12H3zM3 8l3-4h12l3 4M9 13h6" /></svg>
+          {drawerOpen ? 'Close desk drawer' : 'Open desk drawer'}
+        </button>
         <span className="desk-count" aria-label={`${table.game.placements.length} of 12 pieces placed`}><strong>{table.game.placements.length}</strong> / 12 placed</span>
       </section>
+      <div ref={note} id="drawer-note" className="drawer-note" aria-live="polite">
+        <AnimatePresence>{drawerOpen && <m.div className="dedication-paper" initial={{ opacity: 0, y: reducedMotion ? 0 : -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reducedMotion ? 0 : -8 }} transition={{ duration: reducedMotion ? 0 : .25 }}>
+          <p>{DEDICATION}</p>
+        </m.div>}</AnimatePresence>
+      </div>
       <div className="desk-status" role="status" aria-live="polite" data-invalid={table.request && !table.valid || undefined}>
         <span className="status-seed" /><span>{status}</span>
       </div>

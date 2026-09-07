@@ -20,8 +20,8 @@ async function projector() {
   const bounds = await page.locator('.tabletop-canvas').boundingBox();
   assert(bounds);
   const camera = new OrthographicCamera(-bounds.width / 2, bounds.width / 2, bounds.height / 2, -bounds.height / 2, .1, 200);
-  camera.zoom = Math.min(bounds.width / 21.5, bounds.height / 13.8);
-  camera.position.set(1.2, 19, 14); camera.lookAt(0, 0, .1); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  camera.zoom = Math.min(bounds.width / 28, bounds.height / 28);
+  camera.position.set(1.2, 19, 14); camera.lookAt(0, 1, -.5); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
   return (x, y, z) => {
     const v = new Vector3(x, y, z).project(camera);
     return { x: bounds.x + (v.x + 1) * bounds.width / 2, y: bounds.y + (1 - v.y) * bounds.height / 2 };
