@@ -15,6 +15,14 @@ export const DESK_THEME: CSSProperties & Readonly<Record<`--desk-${string}`, str
   '--desk-page': DESK_COLORS.page, '--desk-paper': DESK_COLORS.paper, '--desk-ink': DESK_COLORS.ink,
   '--desk-muted': DESK_COLORS.muted, '--desk-moss': DESK_COLORS.moss, '--desk-line': DESK_COLORS.line,
   '--desk-wood': DESK_COLORS.desk, '--desk-lit': DESK_COLORS.lit,
+  '--desk-case': DESK_COLORS.case, '--desk-lip': DESK_COLORS.lip, '--desk-socket': DESK_COLORS.socket,
+  '--desk-valid': DESK_COLORS.valid, '--desk-invalid': DESK_COLORS.invalid,
+  '--desk-shadow-flat-tray': '0 18px 36px rgb(55 44 29 / 18%), inset 0 1px 1px rgb(255 255 255 / 12%)',
+  '--desk-shadow-flat-inset': 'inset 0 4px 14px rgb(0 0 0 / 36%), 0 1px rgb(255 255 255 / 8%)',
+  '--desk-shadow-flat-socket': 'inset 0 3px 7px rgb(0 0 0 / 55%), 0 1px rgb(255 255 255 / 7%)',
+  '--desk-shadow-flat-bead': 'inset -3px -4px 7px rgb(0 0 0 / 15%), inset 2px 3px 5px rgb(255 255 255 / 28%), 0 3px 7px rgb(0 0 0 / 22%)',
+  '--desk-shadow-flat-palette': '0 5px 12px rgb(75 59 35 / 8%)',
+  '--desk-shadow-flat-miniature': 'inset -2px -2px 3px rgb(0 0 0 / 14%), inset 1px 2px 3px rgb(255 255 255 / 26%), 0 2px 4px rgb(55 44 29 / 18%)',
 };
 export const BEAD_COLORS: Readonly<Record<string, string>> = {
   A: '#e56d45', B: '#8655be', C: '#8bc9d2', D: '#ef9a36',
