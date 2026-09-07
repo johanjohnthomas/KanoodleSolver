@@ -36,6 +36,7 @@ export function TabletopControls({ table }: Readonly<{ table: Controller }>) {
       <div className="piece-rail" role="group" aria-label="Choose a piece">
         {PIECES.map(piece => <m.button type="button" key={piece.name} aria-label={`Piece ${piece.name}`}
           aria-pressed={held?.piece.name === piece.name} data-placed={game.placedNames.has(piece.name) || undefined}
+          data-recovery={game.recovery?.removeNames.includes(piece.name) || undefined}
           style={beadStyle(BEAD_COLORS[piece.name])}
           onClick={() => table.pick(piece)} disabled={game.busy} whileTap={{ scale: .92 }}>
           <span className="rail-bead" /><span>{piece.name}</span>{game.placedNames.has(piece.name) && <CheckIcon aria-hidden="true" className="rail-check" />}

@@ -21,6 +21,7 @@ export type TabletopSceneProps = Readonly<{
   placements: readonly PlacedPiece[]; held: HeldPiece | null; pointer: DeskPoint | null; dragging: boolean;
   request: PieceDropRequest | null; valid: boolean; overhead: boolean; reducedMotion: boolean; disabled: boolean;
   drawerOpen: boolean; onDrawerToggle: () => void;
+  recoveryNames: readonly string[];
   timeOfDay: TimeOfDay; activity: boolean;
   onPick: (piece: Piece) => void; onDrag: () => void; onMove: (point: DeskPoint) => void;
   onDrop: (point: DeskPoint) => void; onUnavailable: () => void;
@@ -56,6 +57,7 @@ function SceneContents(props: TabletopSceneProps) {
         rotation={held?.rotation ?? placement?.rotation ?? 0} flipped={held?.flipped ?? placement?.flipped ?? false}
         angle={selected || placement ? 0 : scatter.angle} lifted={selected} seated={Boolean(placement)}
         dragging={selected && props.dragging} reducedMotion={props.reducedMotion}
+        needsAttention={props.recoveryNames.includes(piece.name)}
         onPick={() => { if (!props.disabled) props.onPick(piece); }} onDrag={props.onDrag}
         onMove={props.onMove} onDrop={props.onDrop} />;
     })}

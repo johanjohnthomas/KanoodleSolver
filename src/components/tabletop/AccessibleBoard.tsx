@@ -8,6 +8,7 @@ import type { useTabletop } from '@/hooks/useTabletop';
 import { FlatPiecePalette } from './FlatPiecePalette';
 import { FlatTransformControls } from './FlatTransformControls';
 import { useFlatBoardPreview } from './useFlatBoardPreview';
+import { RecoveryGuide } from './RecoveryGuide';
 
 export function AccessibleBoard({ table }: Readonly<{ table: ReturnType<typeof useTabletop> }>) {
   const [precision, setPrecision] = useState(false);
@@ -35,6 +36,7 @@ export function AccessibleBoard({ table }: Readonly<{ table: ReturnType<typeof u
           const down = name !== null && table.game.board[y + 1]?.[x] === name;
           return <button key={`${x}:${y}`} type="button" role="gridcell" className="flat-board-cell"
             data-board-x={x} data-board-y={y} data-piece={name ?? undefined}
+            data-recovery={name !== null && table.game.recovery?.removeNames.includes(name) || undefined}
             data-preview={isPreview ? (preview.valid ? 'valid' : 'invalid') : undefined}
             data-connect-right={right || undefined} data-connect-down={down || undefined}
             aria-label={`Row ${y + 1}, column ${x + 1}, ${name ? `piece ${name}` : 'empty'}`}
@@ -63,6 +65,7 @@ export function AccessibleBoard({ table }: Readonly<{ table: ReturnType<typeof u
         }))}
       </div>
     </div>
+    <RecoveryGuide table={table} />
     <p className="flat-preview-status" role="status" aria-live="polite" data-valid={preview.status && preview.valid || undefined} data-invalid={preview.status && !preview.valid || undefined}>
       {preview.status ?? 'Hover or focus a cell to see the exact footprint.'}
     </p>

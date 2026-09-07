@@ -8,6 +8,9 @@ The room extension preserves this world: a finite oak desk with legs, a framed w
 Current extension: bring the 2D board up to the same tactile standard; start 3D at seated eye level; improve the outdoor view and add optional occasional birds, a plane and a car; expose Day, Sunset and Night scene settings. These user-requested ambient events are the exception to the no-idle-motion rule, with pause, reduced-motion and hidden-tab safeguards.
 
 ## Current view and atmosphere contract
+- Drawer: a discoverable 3D-only Easter egg. No labeled drawer button, external note panel, announcement before discovery, or automatic page scrolling. Clicking/tapping the physical drawer reveals the textured card inside the scene; switching to 2D closes it. The puzzle remains fully keyboard-accessible, while the optional Easter egg is a spatial pointer/touch interaction.
+- Camera: overhead keeps the player's orientation, with world +X screen-right and the far side of the board screen-up; no pole crossing, reverse view or 180° roll.
+- Recovery: on a blocked Solve or Hint, find a completion retaining the maximum number of existing placements exactly. Highlight one minimum-cardinality set to lift in amber (shared recovery token), on 3D beads, 2D cells and piece selectors. Keep piece colors and letters. Explain that this is one closest completion, not a claim these pieces are intrinsically wrong. Offer an explicit undoable “Lift highlighted pieces” action; never remove automatically. Clear suggestions after any board change. No arbitrary capped search presented as a closest solution.
 - 2D: a rounded dark Kanoodle case, connected glossy bead silhouettes for both placed and available pieces, exact green/red placement footprints, visible orientation changes and a brief seating animation. Preserve canonical gridcell labels and shared game state; hover/focus previews and touch placement must use the same collision checks. Show all twelve actual piece shapes, not just swatches. No screenshot substitutes or new dependencies.
 - 2D layout: fit the whole 11-column board on narrow phones with at least 24px dense-grid cells and 44px general controls; offer a larger board when precision is needed. Piece palette wraps below the tray. Keyboard and touch must not require dragging, and invalid placement must preserve the prior board.
 - 3D: initial camera sits on the player's side of the desk, looking slightly downward across the puzzle toward the window. Retain a close overhead view for precise placement. Keep the entire puzzle and drawer reachable on mobile.
@@ -75,7 +78,7 @@ UI paper has a soft warm offset shadow, never ornamental bevels.
 - OutdoorScene and OutdoorActivity: layered live countryside geometry and one passing actor at a time; DeskLamp supplies warm interior light after sunset.
 - RoomWindow: framed glazing, sill, sky, layered hills and trees; hidden in overhead mode to keep the puzzle unobstructed.
 - DeskFurniture: finite oak top, apron, legs, brass handle, lined sliding drawer and textured paper dedication; open/closed and reduced-motion states.
-- Drawer disclosure: semantic 44px control and non-modal readable note, sharing state with the mesh handle in all views.
+- Drawer Easter egg: only the physical mesh reveals the in-scene card; its accessible scene description changes after discovery. No visible DOM disclosure or external note.
 - BeadPiece: shared connected sphere/cylinder geometry; scattered, selected/lifted, dragging, transforming, seated.
 - KanoodleCase: rounded modeled body, 55 circular recesses, rim, hinges, latch.
 - Drop footprint: exact transformed grid cells, green for valid and red for blocked; a visible textual result accompanies color.
@@ -87,9 +90,9 @@ UI paper has a soft warm offset shadow, never ornamental bevels.
 - SoundToggle: explicit persisted opt-in, no autoplay.
 
 ## Motion & interaction
-Room discovery: tapping the drawer's wooden front or equivalent 44px DOM control slides it forward 4 world units, revealing a paper card. A legible in-flow dedication supplements the textured physical card; it never traps focus or blocks the puzzle. Opening scrolls only as far as necessary to reveal the readable note, so short phones do not require a second gesture. Closing reverses the same interruptible motion. Reduced motion sets the end position and scroll immediately. No unsolicited sound.
+Room discovery: tapping the drawer's wooden front slides it forward 4 world units, revealing a textured paper card inside 3D. Closing reverses the same interruptible motion. No DOM note, labeled discovery button, page scrolling or unsolicited sound; reduced motion sets the final drawer position immediately.
 Room materials extend the existing oak/ivory/moss palette with plaster #e8dfcf, floor #c6b69d, window trim #faf3e5, sky #b6d9df, distant hills #a6bfa5, near hills #708e6d and drawer lining #68715c. The geometry, frame, handle, and note are live meshes, not a flattened scene image.
-The seated perspective camera is at (0, 8.5, 24), looking at (0, -0.5, -1.5), fitting 28 world units wide / 28 tall. Overhead fits 21.5 × 16, looks straight down, and hides the room walls. View changes damp position, target and field of view at rate 8; reduced motion switches immediately. Initial rendering starts seated without an entrance sweep. The drawer remains available through semantic controls in overhead and 2D modes. Desktop stage height is clamp(620px, 75vh, 840px); phone controls reserve 145px above the room canvas (220px below 375px).
+The seated perspective camera is at (0, 8.5, 24), looking at (0, -0.5, -1.5), fitting 28 world units wide / 28 tall. Overhead is at (0, 32, 4), looking at (0, 0, 0), fitting 21.5 × 16 with a small player-side tilt to avoid a camera pole crossing. View changes damp position, target and field of view at rate 8; reduced motion switches immediately. Initial rendering starts seated without an entrance sweep. Desktop stage height is clamp(620px, 75vh, 840px); phone controls reserve 145px above the room canvas (220px below 375px).
 Pickup raises one piece .8 world units, deepening its contact shadow.
 Rotation is a continuous quarter-turn around the group's vertical axis; flip turns the entire group 180 degrees over its local depth axis.
 Animation uses frame-rate-independent exponential damping (rate 14 position / 12 rotation) and shortest continuous angular targets, including 270→0.
@@ -118,7 +121,7 @@ Loading: visible desk placeholder with concise loading status.
 Empty: board open, all twelve pieces on desk.
 Working: solve/hint controls disabled, clear status.
 Invalid: no board mutation, visible drop reason and return motion.
-Unsolvable: prominent in-flow feedback and recovery.
+Blocked arrangement: RecoveryGuide and amber #e7b858 outlines identify one minimal set to lift, with an explicit undoable action. Recovery scrolls the play surface into view, unlike the hidden drawer. Canonical piece colors remain intact; matching letters and guide text make color optional. Search tests establish cardinality minimality and an actual full-board witness.
 Solved: all 55 cells filled; primary action becomes New puzzle.
 Offline: fully local after initial static assets load.
 WebGL unavailable: semantic 2D mode offered automatically.

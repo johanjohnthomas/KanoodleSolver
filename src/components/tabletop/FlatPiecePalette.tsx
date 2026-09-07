@@ -17,6 +17,7 @@ export function FlatPiecePalette({ table }: Readonly<{ table: Controller }>) {
         aria-label={`Select piece ${piece.name}`}
         aria-pressed={selected}
         data-placed={table.game.placedNames.has(piece.name) || undefined}
+        data-recovery={table.game.recovery?.removeNames.includes(piece.name) || undefined}
         disabled={table.game.busy}
         draggable={!table.game.busy}
         onClick={() => table.pick(piece)}

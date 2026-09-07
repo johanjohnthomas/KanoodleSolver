@@ -8,7 +8,7 @@ export const BOARD_CENTER_Z = -1.5;
 export const DESK_COLORS = {
   page: '#f5f0e7', paper: '#fffaf2', ink: '#343b32', muted: '#69705f', moss: '#405743', line: '#d8d4c8', lit: '#eae2d0',
   desk: '#dfc8a8', grain: '#b49169', case: '#222824', lip: '#343d36',
-  socket: '#101713', brass: '#b3a481', valid: '#42704f', invalid: '#a34237',
+  socket: '#101713', brass: '#b3a481', valid: '#42704f', invalid: '#a34237', recovery: '#e7b858',
   ambient: '#fff2dd', sky: '#fff7e8', ground: '#9d8970', key: '#fff5e5', fill: '#ffffff',
 } as const;
 export const DESK_THEME: CSSProperties & Readonly<Record<`--desk-${string}`, string>> = {
@@ -17,6 +17,7 @@ export const DESK_THEME: CSSProperties & Readonly<Record<`--desk-${string}`, str
   '--desk-wood': DESK_COLORS.desk, '--desk-lit': DESK_COLORS.lit,
   '--desk-case': DESK_COLORS.case, '--desk-lip': DESK_COLORS.lip, '--desk-socket': DESK_COLORS.socket,
   '--desk-valid': DESK_COLORS.valid, '--desk-invalid': DESK_COLORS.invalid,
+  '--desk-recovery': DESK_COLORS.recovery,
   '--desk-shadow-flat-tray': '0 18px 36px rgb(55 44 29 / 18%), inset 0 1px 1px rgb(255 255 255 / 12%)',
   '--desk-shadow-flat-inset': 'inset 0 4px 14px rgb(0 0 0 / 36%), 0 1px rgb(255 255 255 / 8%)',
   '--desk-shadow-flat-socket': 'inset 0 3px 7px rgb(0 0 0 / 55%), 0 1px rgb(255 255 255 / 7%)',

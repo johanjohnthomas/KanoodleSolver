@@ -5,13 +5,14 @@ import { useFrame } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import { Group, MathUtils, Plane, Vector3 } from 'three';
 import { occupiedCells } from '@/lib/pieceGeometry';
-import { BEAD_COLORS, pieceBounds } from '@/lib/tabletop';
+import { BEAD_COLORS, DESK_COLORS, pieceBounds } from '@/lib/tabletop';
 import type { DeskPoint } from '@/lib/tabletop';
 import type { Piece } from '@/lib/types';
 
 type Props = Readonly<{
   piece: Piece; point: DeskPoint; rotation: number; flipped: boolean; angle: number;
   lifted: boolean; seated: boolean; dragging: boolean; reducedMotion: boolean;
+  needsAttention: boolean;
   onPick: () => void; onDrag: () => void; onMove: (point: DeskPoint) => void; onDrop: (point: DeskPoint) => void;
 }>;
 const dragPlane = new Plane(new Vector3(0, 1, 0), -.65);
@@ -21,7 +22,7 @@ const planePoint = (event: ThreeEvent<PointerEvent>): DeskPoint | null => {
   return hit ? { x: hit.x, z: hit.z } : null;
 };
 
-export function BeadPiece({ piece, point, rotation, flipped, angle, lifted, seated, dragging, reducedMotion,
+export function BeadPiece({ piece, point, rotation, flipped, angle, lifted, seated, dragging, reducedMotion, needsAttention,
   onPick, onDrag, onMove, onDrop }: Props) {
   const positionRef = useRef<Group>(null); const turnRef = useRef<Group>(null); const flipRef = useRef<Group>(null);
   const pressed = useRef<Readonly<{ x: number; y: number }> | null>(null);
@@ -50,7 +51,7 @@ export function BeadPiece({ piece, point, rotation, flipped, angle, lifted, seat
     if (moving) state.invalidate();
   });
   return (
-    <group ref={positionRef} position={initialPosition.current}>
+    <group ref={positionRef} position={initialPosition.current} name={`piece-${piece.name}`}>
       <group ref={turnRef}>
         <group ref={flipRef}
           onPointerDown={event => {
@@ -80,7 +81,11 @@ export function BeadPiece({ piece, point, rotation, flipped, angle, lifted, seat
           {cells.map(cell => (
             <mesh key={`${cell.x}:${cell.y}`} position={[cell.x - (bounds.width - 1) / 2, 0, cell.y - (bounds.depth - 1) / 2]} castShadow receiveShadow>
               <sphereGeometry args={[.455, 28, 20]} />
-              <meshPhysicalMaterial color={BEAD_COLORS[piece.name]} roughness={.24} metalness={.03} clearcoat={.48} clearcoatRoughness={.22} />
+              <meshPhysicalMaterial color={BEAD_COLORS[piece.name]} roughness={.24} metalness={.03} clearcoat={.48} clearcoatRoughness={.22}
+                emissive={DESK_COLORS.recovery} emissiveIntensity={needsAttention ? .22 : 0} />
+              {needsAttention && <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, .12, 0]}>
+                <torusGeometry args={[.48, .05, 8, 32]} /><meshBasicMaterial color={DESK_COLORS.recovery} />
+              </mesh>}
             </mesh>
           ))}
           {cells.flatMap(cell => [{ x: cell.x + 1, y: cell.y }, { x: cell.x, y: cell.y + 1 }]

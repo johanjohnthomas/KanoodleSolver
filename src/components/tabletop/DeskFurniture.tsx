@@ -19,7 +19,7 @@ function noteTexture() {
     context.strokeStyle = DESK_COLORS.line; context.lineWidth = 2; context.strokeRect(24, 24, 976, 464);
     context.fillStyle = DESK_COLORS.moss; context.textAlign = 'center'; context.font = 'italic 84px Georgia, serif';
     const [recipient, signature] = DEDICATION.split(' with ');
-    context.fillText(recipient, 512, 225); context.fillText(`with ${signature}`, 512, 335);
+    context.fillText(recipient, 512, 190); context.fillText(`with ${signature}`, 512, 285);
   }
   const texture = new CanvasTexture(canvas); texture.colorSpace = SRGBColorSpace; return texture;
 }
@@ -49,7 +49,8 @@ export function DeskFurniture({ open, reducedMotion, onToggle }: Props) {
       <RoomBox position={[0, -1.85, 6.1]} size={[8.7, .18, 4.8]} color={ROOM_COLORS.drawerLining} />
       {[-4.3, 4.3].map(x => <RoomBox key={x} position={[x, -1.35, 6.1]} size={[.18, 1.1, 4.8]} color={ROOM_COLORS.woodEdge} />)}
       <RoomBox position={[0, -1.35, 3.8]} size={[8.7, 1.1, .18]} color={ROOM_COLORS.woodEdge} />
-      <group onClick={event => { event.stopPropagation(); onToggle(); }}>
+      <group onClick={event => { event.stopPropagation(); onToggle(); }}
+        onPointerOver={() => { document.body.style.cursor = 'pointer'; }} onPointerOut={() => { document.body.style.cursor = ''; }}>
         <RoomBox position={[0, -1.2, 8.6]} size={[9.1, 1.55, .3]} color={ROOM_COLORS.woodEdge} texture={wood} />
         <mesh position={[0, -1.15, 8.91]} rotation={[0, 0, Math.PI / 2]} castShadow>
           <cylinderGeometry args={[.1, .1, 1.6, 20]} /><meshStandardMaterial color={DESK_COLORS.brass} metalness={.65} roughness={.3} />
@@ -59,7 +60,7 @@ export function DeskFurniture({ open, reducedMotion, onToggle }: Props) {
         </mesh>)}
       </group>
       <mesh position={[0, -1.73, 6.25]} rotation={[-Math.PI / 2, 0, -.045]}>
-        <planeGeometry args={[7.4, 3.7]} /><meshStandardMaterial map={note} roughness={.95} />
+        <planeGeometry args={[7.4, 3.7]} /><meshBasicMaterial map={note} />
       </mesh>
     </group>
   </group>;

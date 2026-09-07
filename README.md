@@ -10,12 +10,13 @@ An accessible, client-side solver for the standard 5 × 11 Kanoodle tray. Recrea
 - Guaranteed-solvable easy, medium, and hard starting positions
 - Pointer, touch, and keyboard-friendly placement and removal
 - Interactive 3D desk with a modeled case, recessed sockets, and connected bead pieces
-- A furnished room, countryside window, and a sliding desk drawer with a personal note
+- A furnished room and countryside window
 - Seated desk perspective with Day, Sunset, and Night lighting, plus occasional birds, planes, and passing cars
 - Tactile 2D tray, twelve connected piece previews, animated turns and placement, and valid/blocked footprints
 - Whole-piece animated rotation, flipping, pickup and placement with live drop previews
 - Optional sound, an overhead camera, and an equivalent keyboard-accessible 2D board
 - Responsive interface with reduced-motion and non-WebGL support
+- Closest-completion guidance: highlights the fewest pieces to lift, preserving the others exactly, with an undoable removal action
 - Static export and automatic GitHub Pages deployment
 
 ## Run locally
@@ -39,7 +40,7 @@ The static export is written to `out/`.
 
 For real-browser 3D interaction and responsive checks, serve `out/` locally and run `node scripts/qa-tabletop.mjs` (requires Chrome). Set `PLAYWRIGHT_BASE_URL` to test another deployment. Screenshots and results are saved under `.omo/evidence/tabletop/`.
 
-`node scripts/qa-room.mjs` checks the physical drawer, readable note, touch and keyboard controls, alternate views, and reduced motion across desktop, tablet, phone, and landscape layouts.
+`node scripts/qa-room.mjs` checks spatial interactions, alternate views, and reduced motion across desktop, tablet, phone, and landscape layouts. `node scripts/qa-recovery.mjs` checks minimal-removal highlights, retained placements, undo, and completion through both Hint and Solve.
 
 `node scripts/qa-views.mjs` checks the 2D tray, placement footprints, local orientation controls, responsive precision mode, and persisted room settings. `node scripts/qa-outdoor.mjs` captures the actual bird, plane, and car crossings using a controlled browser clock.
 
@@ -47,7 +48,7 @@ For real-browser 3D interaction and responsive checks, serve `out/` locally and 
 
 Pick a piece from the desk or its letter in the rail, then drag it into the case or click a position. Use **A** to turn left, **D/R** to turn right, **F** to flip, and **Escape** to put it back. The labeled controls do the same on touch devices. Select a placed piece to move it or return it to the desk. The **2D board** view uses the same puzzle state and supports keyboard placement.
 
-Tap the desk's drawer handle to open it, or use **Open desk drawer** below the scene. The note is also available in overhead and 2D views without changing your puzzle.
+If an arrangement cannot be completed, **Hint** and **Solve board** highlight one smallest set of pieces to lift. Nothing is removed until you choose **Lift highlighted pieces**. The other pieces stay exactly where they are, and Undo restores the previous arrangement.
 
 Open **Room settings** beside the camera control to choose the time of day or pause outdoor activity. These preferences are saved locally; ambient activity also pauses offscreen and respects reduced motion. In 2D, choose a shaped piece and hover or focus a cell to preview its footprint. **Use larger cells** gives narrow screens a scrollable precision board.
 
