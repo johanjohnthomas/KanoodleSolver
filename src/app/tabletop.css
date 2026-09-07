@@ -131,8 +131,19 @@
 }
 
 @media (min-width: 601px) and (max-width: 1100px) {
-  .tabletop-stage { height: min(720px, 76vh); background: var(--desk-lit); }
+  .tabletop-stage { height: clamp(520px, 76vh, 720px); background: var(--desk-lit); }
   .tabletop-canvas { position: absolute; top: 145px; height: calc(100% - 145px); }
+}
+
+@media (max-width: 374px) {
+  .header-tools { gap: 4px; }
+  .desk-tool { white-space: nowrap; }
+  .tabletop-stage { height: 600px; }
+  .desk-intro p { max-width: none; }
+  .desk-scene-tools { top: 148px; left: 20px; right: 20px; flex-direction: row; justify-content: space-between; align-items: flex-end; }
+  .challenge-picker { text-align: left; }
+  .tabletop-canvas { top: 220px; height: calc(100% - 220px); }
+  .flat-board-section { padding-top: 250px; }
 }
 
 @media (prefers-reduced-motion: reduce) { .tabletop-shell *, .tabletop-shell *::before, .tabletop-shell *::after { scroll-behavior: auto; } }
