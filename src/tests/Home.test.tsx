@@ -1,35 +1,43 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import Home from '../app/page';
+import { describe, expect, it } from "@jest/globals";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-describe('Home page', () => {
-  it('renders the main heading', () => {
+import Home from "../app/page";
+
+describe("Kanoodle Solver page", () => {
+  it("renders the complete standard tray and piece set", () => {
+    // Given / When
     render(<Home />);
-    const heading = screen.getByText(/Kanoodle Solver/i);
-    expect(heading).toBeInTheDocument();
+
+    // Then
+    expect(screen.getByRole("heading", { name: "Kanoodle Solver" })).toBeTruthy();
+    expect(screen.getAllByRole("gridcell")).toHaveLength(55);
+    expect(screen.getByRole("button", { name: "Piece A" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Piece L" })).toBeTruthy();
   });
 
-  it('opens and closes the settings panel', () => {
+  it("places the selected piece from a board-cell click", () => {
+    // Given
     render(<Home />);
-    const settingsButton = screen.getByText(/Settings/i);
-    fireEvent.click(settingsButton);
-    expect(screen.getByText(/Settings panel content will go here./i)).toBeInTheDocument();
 
-    const closeButton = screen.getByText(/Close/i);
-    fireEvent.click(closeButton);
-    expect(screen.queryByText(/Settings panel content will go here./i)).not.toBeInTheDocument();
+    // When
+    fireEvent.click(screen.getByRole("gridcell", { name: /Row 1, column 1, empty/ }));
+
+    // Then
+    expect(screen.getByRole("gridcell", { name: /Row 1, column 1, piece A/ })).toBeTruthy();
+    expect(screen.getByText("1 / 12 placed")).toBeTruthy();
   });
 
-  it('handles the play and reset buttons', () => {
+  it("solves an empty standard board", async () => {
+    // Given
     render(<Home />);
-    const playButton = screen.getByText(/Play/i);
-    fireEvent.click(playButton);
-    // This is a basic test. A more comprehensive test would check the board state.
-    expect(screen.getByText(/Reset/i)).toBeInTheDocument();
 
-    const resetButton = screen.getByText(/Reset/i);
-    fireEvent.click(resetButton);
-    // Again, a more comprehensive test would check the board state.
-    expect(screen.getByText(/Play/i)).toBeInTheDocument();
-  });
+    // When
+    fireEvent.click(screen.getByRole("button", { name: "Solve board" }));
+
+    // Then
+    await waitFor(() => expect(screen.getByText("Board solved. Every cell is covered.")).toBeTruthy(), {
+      timeout: 9000,
+    });
+    expect(screen.getByText("12 / 12 placed")).toBeTruthy();
+  }, 10000);
 });

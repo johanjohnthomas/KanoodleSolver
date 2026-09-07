@@ -1,0 +1,90 @@
+@media (max-width: 64rem) {
+  .workbench-grid,
+  .action-console {
+    grid-template-columns: 1fr;
+  }
+
+  .piece-inspector {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: var(--space-4);
+  }
+
+  .inspector-title-row {
+    grid-column: 1 / -1;
+  }
+
+  .inspector-content {
+    min-block-size: 8rem;
+  }
+
+  .action-console__tools {
+    justify-content: start;
+  }
+
+  .piece-tray {
+    grid-template-columns: repeat(4, minmax(6.25rem, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .workbench-header,
+  .how-it-works {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .status-plaque {
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+
+  .workbench-page {
+    gap: var(--space-5);
+  }
+
+  .piece-inspector {
+    grid-template-columns: 1fr;
+  }
+
+  .inspector-title-row {
+    grid-column: auto;
+  }
+
+  .action-console__tools .instrument-button,
+  .challenge-options .instrument-button {
+    flex: 1 1 9rem;
+  }
+
+  .section-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .piece-tray {
+    grid-template-columns: repeat(3, minmax(5.5rem, 1fr));
+  }
+
+  .piece-specimen {
+    min-block-size: 6.75rem;
+  }
+
+  .board-shell {
+    --cell-size: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

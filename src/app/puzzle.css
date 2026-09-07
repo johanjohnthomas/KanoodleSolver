@@ -1,0 +1,195 @@
+.specimen-drawer,
+.board-zone {
+  padding: clamp(1rem, 2.4vw, 2rem);
+  border-radius: 1rem;
+}
+
+.specimen-drawer {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent-copper) 30%, var(--color-transparent));
+  background:
+    linear-gradient(145deg, var(--sheen-panel), var(--color-transparent) 28%),
+    linear-gradient(160deg, var(--surface-tray-raised), var(--surface-tray) 48%, var(--surface-tray-recess));
+  color: var(--text-on-dark);
+  box-shadow: var(--shadow-bench);
+}
+
+.specimen-drawer .section-heading p,
+.specimen-drawer .measurement-label {
+  color: var(--text-on-dark-muted);
+}
+
+.piece-tray {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(6.25rem, 1fr));
+  gap: var(--space-3);
+}
+
+.piece-specimen {
+  min-block-size: 7.5rem;
+  border: 0;
+  border-radius: 0.75rem;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  justify-items: center;
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--accent-copper) 18%, var(--color-transparent));
+  background:
+    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--surface-tray-raised) 72%, var(--color-transparent)), var(--color-transparent) 68%),
+    var(--surface-tray-recess);
+  color: var(--text-on-dark);
+  cursor: pointer;
+  box-shadow: var(--shadow-recess), 0 1px var(--sheen-recess);
+  transition: background-color var(--motion-micro), opacity var(--motion-micro), box-shadow var(--motion-micro);
+}
+
+.piece-specimen:hover {
+  background: var(--surface-tray-raised);
+}
+
+.piece-specimen[data-selected] {
+  box-shadow: inset 0 0 0 2px var(--accent-copper-bright), inset 0 0.25rem 0.75rem var(--shadow-well);
+}
+
+.piece-specimen[data-placed] {
+  cursor: not-allowed;
+  opacity: 0.36;
+}
+
+.piece-specimen__letter {
+  justify-self: start;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+}
+
+.piece-specimen__state {
+  color: var(--text-on-dark-muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.board-zone {
+  min-inline-size: 0;
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--accent-copper) 34%, var(--color-transparent));
+  background:
+    linear-gradient(145deg, var(--sheen-board), var(--color-transparent) 30%),
+    color-mix(in srgb, var(--surface-canvas-deep) 84%, var(--accent-copper));
+  box-shadow: 0 1.5rem 3rem var(--shadow-bone), inset 0 2px var(--sheen-canvas), inset 0 -4px var(--shadow-brown-edge);
+}
+
+.piece-inspector::before,
+.piece-inspector::after,
+.action-console::before,
+.action-console::after,
+.specimen-drawer::before,
+.specimen-drawer::after,
+.board-zone::before,
+.board-zone::after {
+  content: "";
+  inline-size: 0.62rem;
+  block-size: 0.62rem;
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--accent-copper) 62%, var(--color-black));
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, var(--accent-copper-bright), var(--accent-copper) 46%, color-mix(in srgb, var(--accent-copper) 62%, var(--color-black)));
+  box-shadow: inset 0 1px var(--sheen-enamel), 0 2px 4px var(--shadow-fastener);
+  pointer-events: none;
+}
+
+.piece-inspector::before,
+.action-console::before,
+.specimen-drawer::before,
+.board-zone::before { inset-inline-start: 0.7rem; }
+
+.piece-inspector::after,
+.action-console::after,
+.specimen-drawer::after,
+.board-zone::after { inset-inline-end: 0.7rem; }
+
+.board-scroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  padding-block-end: var(--space-2);
+}
+
+.board-shell {
+  --cell-size: clamp(2.75rem, 4.6vw, 4rem);
+  min-inline-size: calc(11 * var(--cell-size) + 3.75rem);
+  inline-size: max-content;
+  padding: var(--space-5) var(--space-5) var(--space-5) 2.75rem;
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--accent-copper) 42%, var(--color-transparent));
+  background:
+    linear-gradient(145deg, var(--sheen-recess), var(--color-transparent) 25%),
+    linear-gradient(160deg, var(--surface-tray-raised), var(--surface-tray) 52%, var(--surface-tray-recess));
+  box-shadow: var(--shadow-bench), inset 0 0 0 0.3rem var(--shadow-soft);
+}
+
+.puzzle-board {
+  display: grid;
+  grid-template-columns: repeat(11, var(--cell-size));
+  grid-template-rows: repeat(5, var(--cell-size));
+  gap: 3px;
+  padding: var(--space-2);
+  border-radius: 0.75rem;
+  background: var(--surface-tray-recess);
+  border: 1px solid color-mix(in srgb, var(--accent-copper) 28%, var(--color-transparent));
+  box-shadow: var(--shadow-recess), 0 1px var(--sheen-recess);
+}
+
+.board-cell {
+  border: 1px solid color-mix(in srgb, var(--accent-copper) 42%, var(--color-transparent));
+  border-radius: 0.35rem;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--piece-color, var(--surface-tray-raised)) 76%, var(--color-white)), var(--piece-color, var(--surface-tray-raised)) 46%, color-mix(in srgb, var(--piece-color, var(--surface-tray-raised)) 78%, var(--color-black)));
+  color: var(--text-on-dark);
+  font-family: var(--font-display), sans-serif;
+  font-size: 1rem;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: inset 0 2px var(--sheen-cell), inset 0 -3px var(--shadow-cell);
+  transition: background-color var(--motion-micro), box-shadow var(--motion-micro), border-color var(--motion-micro);
+}
+
+.board-cell:not([data-piece]):hover,
+.board-cell[data-valid] {
+  border-color: var(--status-success);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--status-success) 66%, var(--color-transparent)), inset 0 2px var(--sheen-cell);
+}
+
+.board-cell[data-piece]:hover {
+  box-shadow: inset 0 0 0 2px var(--accent-copper-bright), inset 0 2px var(--sheen-control), inset 0 -3px var(--shadow-cell);
+}
+
+.board-cell:disabled {
+  cursor: wait;
+}
+
+.board-ruler {
+  position: absolute;
+  display: grid;
+  color: var(--accent-copper-bright);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-ruler--top {
+  inset: 0 var(--space-5) auto 2.75rem;
+  grid-template-columns: repeat(11, var(--cell-size));
+  text-align: center;
+}
+
+.board-ruler--side {
+  inset: var(--space-5) auto var(--space-5) var(--space-3);
+  grid-template-rows: repeat(5, var(--cell-size));
+  align-items: center;
+}

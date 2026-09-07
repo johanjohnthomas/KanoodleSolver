@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import Script from "next/script";
+import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { GameProvider } from "@/contexts/GameContext";
 
-const inter = Inter({ subsets: ["latin"] });
+const display = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-display",
+});
+const body = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
+});
 
 export const metadata: Metadata = {
   title: "Kanoodle Solver",
-  description: "An interactive Kanoodle puzzle solver with drag & drop, hints, and auto-solving",
+  description: "Recreate your Kanoodle board, get a guaranteed hint, or solve it completely in your browser.",
 };
 
 export default function RootLayout({
@@ -18,13 +24,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ThemeProvider>
-          <GameProvider>
-            {children}
-          </GameProvider>
-        </ThemeProvider>
-      </body>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="https://unpkg.com/react-scan/dist/auto.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+      </head>
+      <body className={`${display.variable} ${body.variable}`}>{children}</body>
     </html>
   );
 }
