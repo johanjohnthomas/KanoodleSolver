@@ -32,8 +32,8 @@ export function PieceShape({
     <span
       className={`piece-shape piece-shape--${size}`}
       style={{
-        gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
-        gridTemplateRows: `repeat(${rows.length}, 1fr)`,
+        gridTemplateColumns: `repeat(${columns.length}, var(--mini-cell))`,
+        gridTemplateRows: `repeat(${rows.length}, var(--mini-cell))`,
       }}
       aria-hidden="true"
     >

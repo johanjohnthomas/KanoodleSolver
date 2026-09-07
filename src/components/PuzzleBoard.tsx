@@ -2,7 +2,15 @@
 
 import { m, useReducedMotion } from "motion/react";
 
-import type { Board, BoardLayout, Piece } from "@/lib/types";
+import type { DragHandleProps } from "@/hooks/usePieceDrag";
+import type { Cell } from "@/lib/pieceGeometry";
+import type { Board, BoardLayout, Piece, PlacedPiece } from "@/lib/types";
+
+export type BoardDropPreview = Readonly<{
+  cells: readonly Cell[];
+  valid: boolean;
+  movingName: string | null;
+}>;
 
 type PuzzleBoardProps = Readonly<{
   board: Board;
@@ -10,6 +18,9 @@ type PuzzleBoardProps = Readonly<{
   selectedPiece: Piece | null;
   canPlace: (x: number, y: number) => boolean;
   onCellClick: (x: number, y: number) => void;
+  placements: readonly PlacedPiece[];
+  preview: BoardDropPreview | null;
+  getDragHandleProps: (placement: PlacedPiece, onClick: () => void) => DragHandleProps;
   disabled: boolean;
 }>;
 
@@ -19,17 +30,21 @@ export function PuzzleBoard({
   selectedPiece,
   canPlace,
   onCellClick,
+  placements,
+  preview,
+  getDragHandleProps,
   disabled,
 }: PuzzleBoardProps) {
   const reduceMotion = useReducedMotion();
   const labels = new Set<string>();
+  const previewCells = new Set(preview?.cells.map(({ x, y }) => `${x}:${y}`) ?? []);
 
   return (
     <section className="board-zone" aria-labelledby="board-title">
       <div className="section-heading board-heading">
         <div>
           <h2 id="board-title" tabIndex={-1}>The board</h2>
-          <p>{selectedPiece ? `Piece ${selectedPiece.name} is ready to place.` : "Choose a piece or start a challenge."}</p>
+          <p>{selectedPiece ? `Piece ${selectedPiece.name} is ready. Drag it here or choose a cell.` : "Choose a piece or start a challenge."}</p>
         </div>
         <span className="measurement-label">5 × 11 · 55 cells</span>
       </div>
@@ -54,17 +69,27 @@ export function PuzzleBoard({
                   labels.add(pieceName);
                 }
                 const validTarget = selectedPiece !== null && pieceName === null && canPlace(x, y);
+                const placement = pieceName === null
+                  ? undefined
+                  : placements.find(({ piece }) => piece.name === pieceName);
+                const dragHandleProps = placement === undefined
+                  ? { onClick: () => onCellClick(x, y) }
+                  : getDragHandleProps(placement, () => onCellClick(x, y));
                 return (
                   <m.button
                     type="button"
                     role="gridcell"
                     key={`${x}-${y}`}
                     className="board-cell"
+                    {...dragHandleProps}
+                    data-board-x={x}
+                    data-board-y={y}
                     data-piece={pieceName ?? undefined}
                     data-valid={validTarget || undefined}
+                    data-preview={previewCells.has(`${x}:${y}`) ? (preview?.valid ? "valid" : "invalid") : undefined}
+                    data-lifted={preview?.movingName !== null && preview?.movingName === pieceName ? true : undefined}
                     disabled={disabled}
                     aria-label={pieceName ? `Row ${y + 1}, column ${x + 1}, piece ${pieceName}. Remove piece.` : `Row ${y + 1}, column ${x + 1}, empty${validTarget ? ", valid placement" : ""}.`}
-                    onClick={() => onCellClick(x, y)}
                     initial={false}
                     animate={reduceMotion ? { opacity: 1 } : { opacity: 1, scale: pieceName ? 1 : 0.985 }}
                     transition={{ type: "spring", stiffness: 360, damping: 28, mass: 0.8 }}

@@ -116,7 +116,7 @@
 
 .piece-shape {
   display: inline-grid;
-  gap: 2px;
+  gap: 0;
   place-content: center;
 }
 
@@ -133,7 +133,7 @@
 .piece-shape__cell {
   inline-size: var(--mini-cell);
   block-size: var(--mini-cell);
-  border-radius: 0.2rem;
+  border-radius: 0.12rem;
   border: 1px solid color-mix(in srgb, var(--piece-color) 62%, var(--color-black));
   background: linear-gradient(
     145deg,
@@ -146,6 +146,26 @@
 
 .piece-shape__cell--empty {
   visibility: hidden;
+}
+
+.sound-toggle {
+  min-block-size: 2.75rem;
+  border: 0;
+  border-inline-start: 1px solid color-mix(in srgb, var(--accent-copper) 34%, var(--color-transparent));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-inline-start: var(--space-4);
+  background: var(--color-transparent);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.sound-toggle[aria-pressed="true"] {
+  color: var(--status-success);
 }
 
 [data-piece="A"] { --piece-color: var(--piece-a); }

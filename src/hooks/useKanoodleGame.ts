@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 
+import { applyPieceDrop, canDropPiece, removeNamedPiece } from "@/lib/gameBoard";
 import { BOARD_LAYOUTS, PIECES } from "@/lib/pieces";
 import {
   createEmptyBoard,
@@ -10,6 +11,7 @@ import {
   placePieceOnBoard,
 } from "@/lib/solver";
 import type { Board, Piece, PlacedPiece } from "@/lib/types";
+import type { PieceDropRequest } from "@/lib/gameBoard";
 
 type Orientation = Readonly<{ rotation: number; flipped: boolean }>;
 type Snapshot = Readonly<{ board: Board; placements: readonly PlacedPiece[] }>;
@@ -17,12 +19,10 @@ type Snapshot = Readonly<{ board: Board; placements: readonly PlacedPiece[] }>;
 const layout = BOARD_LAYOUTS[0];
 const emptyBoard = (): Board => createEmptyBoard(layout);
 
-const removeNamedPiece = (board: Board, name: string): Board =>
-  board.map((row) => row.map((cell) => (cell === name ? null : cell)));
-
 export function useKanoodleGame() {
   const [board, setBoard] = useState<Board>(emptyBoard);
   const [resetBoard, setResetBoard] = useState<Board>(emptyBoard);
+  const [resetPlacements, setResetPlacements] = useState<readonly PlacedPiece[]>([]);
   const [placements, setPlacements] = useState<readonly PlacedPiece[]>([]);
   const [selectedPiece, setSelectedPiece] = useState<Piece | null>(PIECES[0]);
   const [orientation, setOrientation] = useState<Orientation>({ rotation: 0, flipped: false });
@@ -34,6 +34,10 @@ export function useKanoodleGame() {
     () => new Set(placements.map(({ piece }) => piece.name)),
     [placements],
   );
+  const hasSolverError = message.includes("no complete solution") || message.includes("No guaranteed hint exists");
+  const messageTone = hasSolverError || message.includes("does not fit")
+    ? "error"
+    : message.startsWith("Board solved") ? "success" : "neutral";
 
   const commit = useCallback(
     (nextBoard: Board, nextPlacements: readonly PlacedPiece[], nextMessage: string) => {
@@ -50,6 +54,24 @@ export function useKanoodleGame() {
     setOrientation({ rotation: 0, flipped: false });
     setMessage(`Piece ${piece.name} selected. Set its orientation or choose a cell.`);
   }, []);
+
+  const canDrop = useCallback(
+    (request: PieceDropRequest) => canDropPiece(board, layout, request),
+    [board],
+  );
+
+  const dropPiece = useCallback((request: PieceDropRequest): boolean => {
+    const result = applyPieceDrop(board, layout, placements, request);
+    if (result === null) {
+      setMessage(`Piece ${request.piece.name} does not fit at that position. Try another cell or orientation.`);
+      return false;
+    }
+    commit(result.board, result.placements, `Piece ${request.piece.name} placed.`);
+    const usedNames = new Set(result.placements.map(({ piece }) => piece.name));
+    setSelectedPiece(PIECES.find(({ name }) => !usedNames.has(name)) ?? null);
+    setOrientation({ rotation: 0, flipped: false });
+    return true;
+  }, [board, commit, placements]);
 
   const canPlace = useCallback(
     (x: number, y: number) =>
@@ -89,23 +111,16 @@ export function useKanoodleGame() {
         return;
       }
 
-      const placement: PlacedPiece = {
+      dropPiece({
         piece: selectedPiece,
         x,
         y,
         rotation: orientation.rotation,
         flipped: orientation.flipped,
-      };
-      commit(
-        placePieceOnBoard(board, selectedPiece, x, y, orientation.rotation, orientation.flipped),
-        [...placements, placement],
-        `Piece ${selectedPiece.name} placed.`,
-      );
-      const nextPiece = PIECES.find(({ name }) => !placedNames.has(name) && name !== selectedPiece.name) ?? null;
-      setSelectedPiece(nextPiece);
-      setOrientation({ rotation: 0, flipped: false });
+        movingName: null,
+      });
     },
-    [board, canPlace, commit, orientation, placedNames, placements, selectedPiece],
+    [board, canPlace, commit, dropPiece, orientation, placements, selectedPiece],
   );
 
   const solveBoard = useCallback(() => {
@@ -152,6 +167,7 @@ export function useKanoodleGame() {
       setBoard(nextBoard);
       setResetBoard(nextBoard);
       setPlacements(starting);
+      setResetPlacements(starting);
       setHistory([]);
       setSelectedPiece(PIECES.find(({ name }) => !starting.some(({ piece }) => piece.name === name)) ?? null);
       setOrientation({ rotation: 0, flipped: false });
@@ -163,15 +179,14 @@ export function useKanoodleGame() {
   const reset = useCallback(() => {
     setHistory((current) => [...current, { board, placements }]);
     setBoard(resetBoard.map((row) => [...row]));
-    const resetNames = new Set(resetBoard.flat().filter((cell): cell is string => cell !== null));
-    const resetPlacements = placements.filter(({ piece }) => resetNames.has(piece.name));
     setPlacements(resetPlacements);
     setMessage("Returned to the challenge starting position.");
-  }, [board, placements, resetBoard]);
+  }, [board, placements, resetBoard, resetPlacements]);
 
   const clear = useCallback(() => {
     commit(emptyBoard(), [], "Board cleared. Piece A is selected.");
     setResetBoard(emptyBoard());
+    setResetPlacements([]);
     setSelectedPiece(PIECES[0]);
     setOrientation({ rotation: 0, flipped: false });
   }, [commit]);
@@ -187,25 +202,42 @@ export function useKanoodleGame() {
     setMessage("Last board change undone.");
   }, [history]);
 
+  const rejectDrop = useCallback(() => {
+    setMessage("That piece was released outside the board. Nothing changed.");
+  }, []);
+
+  const rotate = useCallback((change: number) => {
+    setOrientation((current) => ({ ...current, rotation: (current.rotation + change + 4) % 4 }));
+  }, []);
+
+  const toggleFlip = useCallback(() => {
+    setOrientation((current) => ({ ...current, flipped: !current.flipped }));
+  }, []);
+
   return {
     board,
     busy,
     canPlace,
+    canDrop,
     clear,
+    dropPiece,
     getHint,
     handleCell,
     layout,
     message,
+    messageTone,
+    hasSolverError,
     newChallenge,
     orientation,
     placedNames,
     placements,
     reset,
-    rotate: (change: number) => setOrientation((current) => ({ ...current, rotation: (current.rotation + change + 4) % 4 })),
+    rejectDrop,
+    rotate,
     selectPiece,
     selectedPiece,
     solveBoard,
-    toggleFlip: () => setOrientation((current) => ({ ...current, flipped: !current.flipped })),
+    toggleFlip,
     undo,
     canUndo: history.length > 0,
   };

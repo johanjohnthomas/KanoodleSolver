@@ -169,9 +169,9 @@ a:focus-visible {
 }
 
 .status-plaque {
-  min-inline-size: 18rem;
+  min-inline-size: 25rem;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto auto auto;
   align-items: center;
   padding: var(--space-3) var(--space-4);
   border-radius: 0.75rem;

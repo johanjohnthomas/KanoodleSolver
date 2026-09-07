@@ -3,6 +3,7 @@
 import { m, useReducedMotion } from "motion/react";
 
 import { PieceShape } from "./PieceShape";
+import type { DragHandleProps } from "@/hooks/usePieceDrag";
 import type { Piece, PlacedPiece } from "@/lib/types";
 
 type PieceTrayProps = Readonly<{
@@ -10,9 +11,10 @@ type PieceTrayProps = Readonly<{
   placed: readonly PlacedPiece[];
   selectedName: string | null;
   onSelect: (piece: Piece) => void;
+  getDragHandleProps: (piece: Piece, onClick: () => void) => DragHandleProps;
 }>;
 
-export function PieceTray({ pieces, placed, selectedName, onSelect }: PieceTrayProps) {
+export function PieceTray({ pieces, placed, selectedName, onSelect, getDragHandleProps }: PieceTrayProps) {
   const reduceMotion = useReducedMotion();
   const placedNames = new Set(placed.map(({ piece }) => piece.name));
 
@@ -21,7 +23,7 @@ export function PieceTray({ pieces, placed, selectedName, onSelect }: PieceTrayP
       <div className="section-heading">
         <div>
           <h2 id="piece-drawer-title">Piece drawer</h2>
-          <p>Choose a piece, set its orientation, then choose a board cell.</p>
+          <p>Drag a piece to the board, or choose it for click placement. Use A, D, R, or F while dragging.</p>
         </div>
         <span className="measurement-label">A–L · 12 pieces</span>
       </div>
@@ -29,6 +31,7 @@ export function PieceTray({ pieces, placed, selectedName, onSelect }: PieceTrayP
         {pieces.map((piece) => {
           const isPlaced = placedNames.has(piece.name);
           const isSelected = selectedName === piece.name;
+          const dragHandleProps = getDragHandleProps(piece, () => onSelect(piece));
           return (
             <m.button
               type="button"
@@ -39,7 +42,8 @@ export function PieceTray({ pieces, placed, selectedName, onSelect }: PieceTrayP
               aria-pressed={isSelected}
               disabled={isPlaced}
               aria-label={`Piece ${piece.name}${isPlaced ? ", already placed" : ""}`}
-              onClick={() => onSelect(piece)}
+              {...dragHandleProps}
+              data-drag-source="tray"
               whileHover={reduceMotion || isPlaced ? undefined : { y: -2 }}
               whileTap={reduceMotion || isPlaced ? undefined : { scale: 0.97 }}
               transition={{ type: "spring", stiffness: 360, damping: 28 }}

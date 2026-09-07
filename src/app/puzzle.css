@@ -42,6 +42,7 @@
     var(--surface-tray-recess);
   color: var(--text-on-dark);
   cursor: pointer;
+  touch-action: none;
   box-shadow: var(--shadow-recess), 0 1px var(--sheen-recess);
   transition: background-color var(--motion-micro), opacity var(--motion-micro), box-shadow var(--motion-micro);
 }
@@ -168,6 +169,15 @@
 
 .board-cell[data-piece]:hover {
   box-shadow: inset 0 0 0 2px var(--accent-copper-bright), inset 0 2px var(--sheen-control), inset 0 -3px var(--shadow-cell);
+}
+
+.board-cell[data-piece] {
+  cursor: grab;
+  touch-action: none;
+}
+
+.board-cell[data-piece]:active {
+  cursor: grabbing;
 }
 
 .board-cell:disabled {

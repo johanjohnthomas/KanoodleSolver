@@ -5,7 +5,7 @@
 - Embedded refs: shortlisted Figma, Miro, and PlayStation; selected the existing-project redesign discipline plus Figma’s monochrome-tool/chromatic-content separation because the puzzle pieces, not the chrome, should carry color.
 - Lazyweb: 2 searches, 6 screens viewed (LA Times Sudoku, Boston Globe Sudoku, CNN Sudoblock, Slite canvas, GitBook canvas, Figma canvas). Harvested one dominant play surface, peripheral tool controls, immediate entry actions, and restrained status chrome.
 - Imagen drafts: `.impeccable/mocks/decision/kanoodle-bench-a.png`, `.impeccable/mocks/decision/kanoodle-bench-selected.png`, `.impeccable/mocks/decision/kanoodle-bench-mobile.png`. Selected `kanoodle-bench-selected.png` as the desktop composition contract and `kanoodle-bench-mobile.png` as responsive intent.
-- Interaction reference: beui.dev `action-swap`; adapted its blur-and-scale state replacement and live reduced-motion branch for solver status and action feedback.
+- Interaction references: beui.dev `action-swap` for blur-and-scale state replacement, `swipeable-list` for interruptible gesture thresholds and momentum-free settling, and `button` for compact state feedback. Motion drag-event coordinates inform the pointer layer; board geometry remains the placement authority.
 - Direction: Impeccable’s concept roll selected the fifth grounded direction, a jeweler’s sorting bench. The assigned system beat the surreal garden, iridescent cloud, CRT arcade, oscilloscope, pop sleeve, and ruling-engine challengers on product clarity; it keeps the oscilloscope’s precise state legibility and the ruling engine’s disciplined hairlines as raises.
 
 ## Source of truth
@@ -31,6 +31,7 @@ The interface is a calm puzzle workbench: warm, tactile, and exact. The signatur
 - Keep every manual placement legal and reversible.
 - Make hints and full solutions visibly trustworthy.
 - Fit the full workflow into one page without navigation or account friction.
+- Make direct manipulation feel physical: lift any available or placed piece, preview its footprint, transform it in hand, and receive a decisive drop result.
 - Non-goals: leaderboards, social play, analytics, multiple unsupported board geometries.
 
 ### Personas and jobs
@@ -142,6 +143,13 @@ The interface is a calm puzzle workbench: warm, tactile, and exact. The signatur
 - States: ready, placing, solving, solved, unsatisfiable.
 - Motion: restrained blur/opacity swap; never loops.
 
+### Direct manipulation layer
+
+- `DragPreview`: pointer-following enamel piece with lifted depth, current orientation, and valid/invalid state. It never owns placement truth.
+- `DragInstructions`: visible instrument legend during a drag: `A` rotate left, `D`/`R` rotate right, `F` flip.
+- `SolverFeedback`: high-salience unsatisfiable-board panel with Undo and Reset actions in the same surface.
+- `SoundToggle`: explicit opt-in for synthesized pickup, rotate, flip, valid-drop, invalid-drop, solve, and error cues. No autoplay or downloaded audio asset.
+
 ## 6. Motion & Interaction
 
 | Token | Value | Usage |
@@ -150,11 +158,15 @@ The interface is a calm puzzle workbench: warm, tactile, and exact. The signatur
 | `--motion-standard` | 220ms ease-in-out | Inspector/state swap |
 | placement spring | stiffness 360, damping 28, mass 0.8 | Whole-piece placement |
 | press spring | stiffness 420, damping 30, mass 0.6 | Button press |
+| drag spring | stiffness 520, damping 42, mass 0.72 | Lifted piece and drop settle |
 
 - Motion communicates selection, placement, removal, solver progress, or completion.
 - Spatial motion uses Motion for React; simple color transitions remain CSS.
 - `MotionConfig reducedMotion="user"` is mandatory. Reduced motion replaces transforms with opacity/color feedback.
 - Solver work is synchronous but staged through React transition/state messaging so the pressed control visibly enters a working state first.
+- Focal moment: a lifted piece follows the pointer as one enamel specimen while its exact footprint lights beneath it; valid release settles into the tray, invalid release retracts into a red recovery cue.
+- Gestures have no inertia or queued animation. Pointer tracking stays transform-only, board previews update from cell coordinates, and every transition remains interruptible.
+- Audio is opt-in and synthesized through Web Audio after a user gesture. Cues stay under 180ms except the solved chord, never loop, and are never the only feedback channel.
 
 ## 7. Depth & Surface
 
@@ -174,6 +186,8 @@ Strategy: mixed material depth, with a single top-left light source.
 - Full keyboard operation, visible focus, 44px touch targets, live status announcements, semantic buttons/grid labels.
 - The full task survives 200% zoom, 320px CSS width, coarse pointer, and `prefers-reduced-motion: reduce`.
 - Instructions never depend on drag-and-drop; click/tap placement is primary.
+- Dragging supports pointer and touch; labeled inspector buttons remain the equivalent path. During a drag, `A`, `D`/`R`, and `F` are additional shortcuts shown on screen.
+- Sound begins disabled until the user opts in and always has a persistent toggle.
 
 ### Accepted debt
 
@@ -184,6 +198,7 @@ None.
 - Loading/working: action label becomes “Solving…” or “Finding a hint…” and competing solver actions disable.
 - Empty: empty board plus “Choose a piece or start a challenge.”
 - Error: retain the board and selected piece, announce that the current arrangement has no complete solution, offer Undo or Reset.
+- Invalid drop: leave the board unchanged, mark the attempted footprint red, announce that it does not fit, and optionally play one short low cue.
 - Success: complete board, solved status, primary action becomes “New puzzle.”
 - Offline/slow network: no functional impact after the static page loads; solving is local.
 

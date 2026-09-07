@@ -1,0 +1,155 @@
+.status-strip[data-tone="error"] {
+  border: 1px solid color-mix(in srgb, var(--status-error) 42%, var(--color-transparent));
+  background: color-mix(in srgb, var(--status-error) 10%, var(--surface-canvas));
+}
+
+.status-strip[data-tone="success"] {
+  border: 1px solid color-mix(in srgb, var(--status-success) 32%, var(--color-transparent));
+  background: color-mix(in srgb, var(--status-success) 8%, var(--surface-canvas));
+}
+
+.board-cell[data-preview="valid"] {
+  border-color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 62%, var(--surface-tray-raised));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--status-success) 72%, var(--color-transparent)), inset 0 2px var(--sheen-enamel);
+}
+
+.board-cell[data-preview="invalid"] {
+  border-color: var(--status-error);
+  background: color-mix(in srgb, var(--status-error) 64%, var(--surface-tray-raised));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--status-error) 74%, var(--color-transparent)), inset 0 2px var(--sheen-enamel);
+}
+
+.board-cell[data-lifted] {
+  opacity: 0.24;
+  filter: saturate(0.35);
+}
+
+.drag-preview {
+  position: fixed;
+  z-index: 60;
+  translate: -50% -58%;
+  display: grid;
+  place-items: center;
+  min-inline-size: 6rem;
+  min-block-size: 6rem;
+  border: 2px solid var(--accent-copper-bright);
+  border-radius: 1rem;
+  padding: var(--space-3);
+  background: color-mix(in srgb, var(--surface-tray-recess) 92%, var(--color-transparent));
+  box-shadow: 0 1.25rem 2.5rem var(--shadow-well), inset 0 1px var(--sheen-enamel);
+  pointer-events: none;
+  will-change: transform, opacity, filter;
+}
+
+.drag-preview[data-drop-state="valid"] {
+  border-color: var(--status-success);
+}
+
+.drag-preview[data-drop-state="invalid"] {
+  border-color: var(--status-error);
+}
+
+.drag-preview .piece-shape--large {
+  --mini-cell: 1.35rem;
+}
+
+.drag-instructions {
+  max-inline-size: calc(100vw - 2rem);
+  position: fixed;
+  z-index: 61;
+  inset: auto auto var(--space-5) 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--accent-copper) 42%, var(--color-transparent));
+  border-radius: 0.75rem;
+  background: var(--surface-tray);
+  color: var(--text-on-dark);
+  box-shadow: var(--shadow-bench);
+  font-size: 0.8rem;
+  font-weight: 650;
+  pointer-events: none;
+}
+
+.drag-instructions kbd {
+  min-inline-size: 1.45rem;
+  display: inline-grid;
+  place-items: center;
+  margin-inline: 0.15rem;
+  border: 1px solid var(--accent-copper);
+  border-radius: 0.3rem;
+  background: var(--surface-tray-raised);
+  color: var(--accent-copper-bright);
+  font: inherit;
+}
+
+.solver-feedback {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border: 2px solid color-mix(in srgb, var(--status-error) 68%, var(--surface-tray));
+  border-radius: 1rem;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--status-error) 12%, var(--color-white)), var(--color-transparent) 42%),
+    color-mix(in srgb, var(--status-error) 9%, var(--surface-canvas));
+  box-shadow: 0 1.25rem 2.5rem color-mix(in srgb, var(--status-error) 18%, var(--color-transparent)), inset 0 1px var(--sheen-canvas);
+}
+
+.solver-feedback__icon {
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  color: var(--status-error);
+}
+
+.solver-feedback h2 {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.solver-feedback p {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+}
+
+.solver-feedback__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: var(--space-2);
+}
+
+@media (max-width: 48rem) {
+  .solver-feedback {
+    grid-template-columns: auto 1fr;
+  }
+
+  .solver-feedback__actions {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+  }
+
+  .solver-feedback__actions .instrument-button {
+    flex: 1 1 9rem;
+  }
+
+  .drag-instructions {
+    inline-size: calc(100vw - 1.5rem);
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: 0.72rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drag-preview {
+    translate: -50% -50%;
+    will-change: auto;
+  }
+}
