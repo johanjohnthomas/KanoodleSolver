@@ -46,7 +46,7 @@ For real-browser 3D interaction and responsive checks, serve `out/` locally and 
 
 ## Tabletop controls
 
-Pick a piece from the desk or its letter in the rail, then drag it into the case or click a position. Use **A** to turn left, **D/R** to turn right, **F** to flip, and **Escape** to put it back. The labeled controls do the same on touch devices. Select a placed piece to move it or return it to the desk. The **2D board** view uses the same puzzle state and supports keyboard placement.
+Pick a piece from the desk or its letter in the rail, then drag it into the case or click a position. Use **A** to turn left, **D/R** to turn right, **F** to flip, and **Escape** to put it back. The labeled controls do the same on touch devices. Select a placed piece to move it, or drag it fully clear of the case onto the tabletop to return it to the desk. Undo restores its original placement. The **2D board** view uses the same puzzle state and supports keyboard placement.
 
 If an arrangement cannot be completed, **Hint** and **Solve board** highlight one smallest set of pieces to lift. Nothing is removed until you choose **Lift highlighted pieces**. The other pieces stay exactly where they are, and Undo restores the previous arrangement.
 

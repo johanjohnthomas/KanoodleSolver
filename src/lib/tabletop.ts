@@ -60,3 +60,11 @@ export function placementCenter(piece: Piece, x: number, y: number, rotation: nu
 
 export const isOverBoard = (point: DeskPoint): boolean =>
   Math.abs(point.x) < 5.75 && Math.abs(point.z - BOARD_CENTER_Z) < 2.75;
+
+export function canReturnToDesk(held: HeldPiece, point: DeskPoint): boolean {
+  if (!held.movingName) return false;
+  const bounds = pieceBounds(held.piece, held.rotation, held.flipped);
+  const fitsDesk = Math.abs(point.x) + bounds.width / 2 <= 11.6 && Math.abs(point.z) + bounds.depth / 2 <= 8.8;
+  const clearsCase = Math.abs(point.x) - bounds.width / 2 > 6.1 || Math.abs(point.z - BOARD_CENTER_Z) - bounds.depth / 2 > 3.2;
+  return fitsDesk && clearsCase;
+}

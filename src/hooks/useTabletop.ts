@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useKanoodleGame } from './useKanoodleGame';
 import { useSoundEffects } from './useSoundEffects';
-import { dropOrigin, isOverBoard } from '@/lib/tabletop';
+import { canReturnToDesk, dropOrigin, isOverBoard } from '@/lib/tabletop';
 import type { DeskPoint, HeldPiece } from '@/lib/tabletop';
 import type { Piece } from '@/lib/types';
 
@@ -61,13 +61,16 @@ export function useTabletop() {
 
   const request = held && pointer && isOverBoard(pointer) ? { ...held, ...dropOrigin(held, pointer) } : null;
   const valid = request !== null && game.canDrop(request);
+  const returningToDesk = held !== null && pointer !== null && canReturnToDesk(held, pointer);
   const drop = (point: DeskPoint): void => {
     setDragging(false);
-    if (!held) return;
-    if (isOverBoard(point) && game.dropPiece({ ...held, ...dropOrigin(held, point) })) {
+    if (!held || game.busy) return;
+    if (canReturnToDesk(held, point)) {
+      remove();
+    } else if (isOverBoard(point) && game.dropPiece({ ...held, ...dropOrigin(held, point) })) {
       setNotice(`Piece ${held.piece.name} settled into place.`); play('place'); setHeld(null);
     } else {
-      setNotice(isOverBoard(point) ? 'That spot doesn’t fit. Try a turn or another space.' : 'Back on the desk. Drop inside the case to place it.');
+      setNotice(isOverBoard(point) ? 'That spot doesn’t fit. Try a turn or another space.' : 'Nothing changed. Drop fully on the tabletop to return a placed piece.');
       play('invalid');
     }
     setPointer(null);
@@ -82,7 +85,7 @@ export function useTabletop() {
     if (row >= 0 && column >= 0) game.handleCell(column, row);
     setHeld(null); setNotice('Piece returned to the desk.'); play('pickup');
   };
-  return { game, sound, held, pointer, dragging, notice, request, valid, pick, transform, cancel, drop, operate, remove,
+  return { game, sound, held, pointer, dragging, notice, request, valid, returningToDesk, pick, transform, cancel, drop, operate, remove,
     move: setPointer,
     startDrag: () => setDragging(true),
   };

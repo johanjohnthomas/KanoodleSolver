@@ -28,14 +28,18 @@ export function TabletopWorkbench() {
   const [help, setHelp] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const toggleDrawer = useCallback(() => setDrawerOpen(open => !open), []);
-  const reducedMotion = useReducedMotion() ?? false;
+  const prefersReducedMotion = useReducedMotion() ?? false;
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  const reducedMotion = hydrated && prefersReducedMotion;
   const stage = useRef<HTMLElement>(null);
   useEffect(() => {
     if (table.game.recovery) stage.current?.querySelector(flat ? '.flat-board-scroll' : '.tabletop-canvas')
       ?.scrollIntoView({ block: flat ? 'center' : 'start', behavior: reducedMotion ? 'instant' : 'smooth' });
   }, [table.game.recovery, flat, reducedMotion]);
   const unavailable = useCallback(() => setFlat(true), []);
-  const status = table.request ? (table.valid ? 'Fits here. Release to place.' : 'Not quite. Try another spot or orientation.') : table.notice || table.game.message;
+  const status = table.returningToDesk ? `Release to return piece ${table.held?.piece.name} to the desk.`
+    : table.request ? (table.valid ? 'Fits here. Release to place.' : 'Not quite. Try another spot or orientation.') : table.notice || table.game.message;
 
   return <LazyMotion features={domAnimation}><MotionConfig reducedMotion="user">
     <main className="tabletop-shell" style={DESK_THEME}>
@@ -51,7 +55,7 @@ export function TabletopWorkbench() {
         </div>
       </header>
       <AnimatePresence>{help && <m.section id="desk-help" className="desk-help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <h2>Your desk, your pace.</h2><p>Pick up a piece or choose its letter below. Drag it into the case, or click a spot to place it. Green rings show a fit. Pick up any placed piece to move it.</p>
+        <h2>Your desk, your pace.</h2><p>Pick up a piece or choose its letter below. Drag it into the case, or click a spot to place it. Green rings show a fit. Pick up any placed piece to move it, or drag it fully onto the tabletop to return it to the desk.</p>
         <p>Use <kbd>A</kbd> to turn left, <kbd>D</kbd> or <kbd>R</kbd> to turn right, <kbd>F</kbd> to flip, and <kbd>Esc</kbd> to put it back. The 2D board offers larger cells and full keyboard control.</p>
       </m.section>}</AnimatePresence>
       <section ref={stage} className="tabletop-stage" aria-label="Interactive Kanoodle desk" data-view={flat ? 'flat' : '3d'} data-time={room.timeOfDay} style={ROOM_THEME}>
