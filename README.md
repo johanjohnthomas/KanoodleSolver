@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kanoodle Solver
 
-## Getting Started
+An accessible, client-side solver for the standard 5 × 11 Kanoodle tray. Recreate the pieces already on your physical board, rotate or flip the remaining pieces, request a guaranteed-solvable hint, or reveal a complete solution.
 
-First, run the development server:
+## What works
+
+- Complete backtracking solver across all unique rotations and reflections
+- Seeded-board validation that preserves pieces already placed
+- Hints selected only from a verified complete solution
+- Guaranteed-solvable easy, medium, and hard starting positions
+- Pointer, touch, and keyboard-friendly placement and removal
+- Responsive specimen-bench interface with reduced-motion support
+- Static export and automatic GitHub Pages deployment
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Verify
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test -- --runInBand
+npm run build
+npm run doctor
+```
 
-## Learn More
+The static export is written to `out/`.
 
-To learn more about Next.js, take a look at the following resources:
+## GitHub Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The workflow at `.github/workflows/deploy-pages.yml` tests, builds, uploads, and deploys the static export whenever `master` or `main` is pushed. In the repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+For this repository, the expected project URL is:
 
-## Deploy on Vercel
+<https://johanjohnthomas.github.io/KanoodleSolver/>
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The Next.js base path is derived from `GITHUB_REPOSITORY` during the Actions build, so forks and renamed repositories deploy under their own repository path.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Solver model
+
+The twelve included pieces cover exactly 55 cells. The solver deduplicates symmetric orientations, preflights board area, and uses a minimum-remaining-values search: it chooses the empty cell with the fewest legal candidate placements, tries each candidate, and backtracks until the board is complete or every possibility is exhausted.
