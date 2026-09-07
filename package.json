@@ -1,5 +1,11 @@
 {
   "name": "kanoodle-solver",
+  "description": "An interactive Kanoodle solver with a cozy 3D desk, accessible 2D board, spoiler-free checks, hints, and minimal-removal recovery.",
+  "homepage": "https://johanjohnthomas.github.io/KanoodleSolver/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johanjohnthomas/KanoodleSolver.git"
+  },
   "version": "0.1.0",
   "private": true,
   "scripts": {
