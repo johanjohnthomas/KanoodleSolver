@@ -12,6 +12,8 @@ import {
 } from "@/lib/solver";
 import type { Board, Piece, PlacedPiece } from "@/lib/types";
 import type { PieceDropRequest } from "@/lib/gameBoard";
+import { findClosestRecovery } from '@/lib/solverRecovery';
+import type { SolverRecovery } from '@/lib/solverRecovery';
 
 type Orientation = Readonly<{ rotation: number; flipped: boolean }>;
 type Snapshot = Readonly<{ board: Board; placements: readonly PlacedPiece[] }>;
@@ -29,12 +31,13 @@ export function useKanoodleGame() {
   const [history, setHistory] = useState<readonly Snapshot[]>([]);
   const [message, setMessage] = useState("Piece A is selected. Choose a board cell.");
   const [busy, setBusy] = useState(false);
+  const [recovery, setRecovery] = useState<SolverRecovery | null>(null);
 
   const placedNames = useMemo(
     () => new Set(placements.map(({ piece }) => piece.name)),
     [placements],
   );
-  const hasSolverError = message.includes("no complete solution") || message.includes("No guaranteed hint exists");
+  const hasSolverError = recovery !== null || message.includes("no complete solution") || message.includes("No guaranteed hint exists");
   const messageTone = hasSolverError || message.includes("does not fit")
     ? "error"
     : message.startsWith("Board solved") ? "success" : "neutral";
@@ -42,6 +45,7 @@ export function useKanoodleGame() {
   const commit = useCallback(
     (nextBoard: Board, nextPlacements: readonly PlacedPiece[], nextMessage: string) => {
       setHistory((current) => [...current, { board, placements }]);
+      setRecovery(null);
       setBoard(nextBoard);
       setPlacements(nextPlacements);
       setMessage(nextMessage);
@@ -123,42 +127,45 @@ export function useKanoodleGame() {
     [board, canPlace, commit, dropPiece, orientation, placements, selectedPiece],
   );
 
-  const solveBoard = useCallback(() => {
+  const requestAssistance = useCallback((mode: 'solve' | 'hint') => {
     setBusy(true);
-    setMessage("Solving this arrangement…");
-    window.setTimeout(() => {
+    setRecovery(null);
+    setMessage(mode === 'solve' ? 'Solving this arrangement…' : 'Finding a guaranteed hint…');
+    window.setTimeout(async () => {
       const solver = new KanoodleSolver(board, layout);
       const solution = solver.solve();
       if (solution === null) {
-        setMessage("This arrangement has no complete solution. Undo or reset a piece and try again.");
-      } else {
+        setMessage('Finding the fewest pieces to lift…');
+        const suggestion = await findClosestRecovery(placements, layout);
+        setRecovery(suggestion);
+        setMessage(suggestion ? `Lift ${suggestion.removeNames.join(', ')} to open a path to a complete board.` : 'This arrangement has no complete solution. Try resetting the board.');
+      } else if (mode === 'solve') {
         commit(solver.getSolution(), solution, "Board solved. Every cell is covered.");
         setSelectedPiece(null);
-      }
-      setBusy(false);
-    }, 20);
-  }, [board, commit]);
-
-  const getHint = useCallback(() => {
-    setBusy(true);
-    setMessage("Finding a hint that keeps the board solvable…");
-    window.setTimeout(() => {
-      const hint = new KanoodleSolver(board, layout).getHint();
-      if (hint === null) {
-        setMessage("No guaranteed hint exists for this arrangement. Undo or reset and try again.");
       } else {
-        commit(
+        const hint = solution.find(({ piece }) => !placements.some(placed => placed.piece.name === piece.name));
+        if (hint) commit(
           placePieceOnBoard(board, hint.piece, hint.x, hint.y, hint.rotation, hint.flipped),
           [...placements, hint],
           `Hint placed piece ${hint.piece.name}. The board still has a complete solution.`,
         );
+        else setMessage('Board solved. Every cell is covered.');
       }
       setBusy(false);
     }, 20);
   }, [board, commit, placements]);
+  const solveBoard = useCallback(() => requestAssistance('solve'), [requestAssistance]);
+  const getHint = useCallback(() => requestAssistance('hint'), [requestAssistance]);
+  const applyRecovery = useCallback(() => {
+    if (busy || !recovery) return;
+    const removed = new Set(recovery.removeNames);
+    commit(board.map(row => row.map(name => name !== null && removed.has(name) ? null : name)),
+      placements.filter(({ piece }) => !removed.has(piece.name)), 'Highlighted pieces returned to the desk. The remaining arrangement can be completed.');
+  }, [board, busy, commit, placements, recovery]);
 
   const newChallenge = useCallback((seedCount: number) => {
     setBusy(true);
+    setRecovery(null);
     setMessage("Preparing a guaranteed-solvable challenge…");
     window.setTimeout(() => {
       const solver = new KanoodleSolver(emptyBoard(), layout);
@@ -177,6 +184,7 @@ export function useKanoodleGame() {
   }, []);
 
   const reset = useCallback(() => {
+    setRecovery(null);
     setHistory((current) => [...current, { board, placements }]);
     setBoard(resetBoard.map((row) => [...row]));
     setPlacements(resetPlacements);
@@ -197,6 +205,7 @@ export function useKanoodleGame() {
       return;
     }
     setBoard(previous.board);
+    setRecovery(null);
     setPlacements(previous.placements);
     setHistory((current) => current.slice(0, -1));
     setMessage("Last board change undone.");
@@ -227,6 +236,8 @@ export function useKanoodleGame() {
     message,
     messageTone,
     hasSolverError,
+    recovery,
+    applyRecovery,
     newChallenge,
     orientation,
     placedNames,
